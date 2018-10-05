@@ -36,7 +36,7 @@ class Individual:
 	def __init__(self, graph, mutationRate):
 		self.graph = graph
 		self.numNodes = len(graph[0])
-		self.vertexColors = np.random.randint(1, self.numNodes, size=self.numNodes)
+		self.vertexColors = np.random.randint(1, self.numNodes, size=self.numNodes) #creates an assortment of random colors
 		self.mutationRate = mutationRate
 
 	def fitness(self):
@@ -135,8 +135,8 @@ class Population:
 		
 		
 
-graph = readFileInstance('flat1000_76_0.col')
-population = Population(graph, 6)
+graph = readFileInstance('simple.col')
+population = Population(graph, 20)
 for i in range(100):
 	print("Generation {0}:".format(i))
 	population.nextGen()
