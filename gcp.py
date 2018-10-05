@@ -1,6 +1,7 @@
 import fileinput
 import sys
 import numpy as np
+import time
 
 def readFileInstance(file):
 	nodes = 0
@@ -32,10 +33,11 @@ def readFileInstance(file):
 	return graph
 
 class Individual:
-	def __init__(self, graph):
+	def __init__(self, graph, mutationRate):
 		self.graph = graph
 		self.numNodes = len(graph[0])
 		self.vertexColors = np.random.randint(1, self.numNodes, size=self.numNodes)
+		self.mutationRate = mutationRate
 
 	def fitness(self):
 		score = 0
@@ -43,9 +45,19 @@ class Individual:
 			for j in range(self.numNodes):
 				if(self.graph[i][j] == 1):
 					if(self.vertexColors[i] == self.vertexColors[j]):
-						print("Warning: {0} ({1}) to {2} ({3})".format(i, self.vertexColors[i], j, self.vertexColors[j]))
+						#print("Warning: {0} ({1}) to {2} ({3})".format(i, self.vertexColors[i], j, self.vertexColors[j]))
 						score -= 1
 		return score
+		
+	def mutation(self):
+		r = np.random.random()
+		if(self.mutationRate > r):
+			position = np.random.randint(0, self.numNodes-1)
+			#print("New vertexColors: {0}".format(self.vertexColors))
+			#print("Vertex color at {0} before = {1}".format(position+1, self.vertexColors[position]))
+			self.vertexColors[position] = np.random.randint(1, self.numNodes)
+			#print("New vertexColors: {0}".format(self.vertexColors))
+		
 
 class Population:
 	def __init__(self, graph, size):
@@ -61,9 +73,17 @@ class Population:
 	def initialize(self):
 		population = []
 		for i in range(self.size):
-			individual = Individual(self.graph)
+			individual = Individual(self.graph, 1) # 1 = mutation rate
 			population.append(individual)
 		return population
+		
+	def crossover(self, indiv1, indiv2):
+		cut = np.random.randint(1, self.numNodes-1)
+		#print("Candidates before crossover: \n {0} \n {1}".format(vertexColors1, vertexColors2))
+		for i in range(cut,self.numNodes):
+			indiv1.vertexColors[i], indiv2.vertexColors[i] = indiv2.vertexColors[i], indiv1.vertexColors[i]
+		#print("Candidates after crossover: \n {0} \n {1}".format(vertexColors1, vertexColors2))
+		return indiv1,indiv2
 
 	def beautifulGraph(self):
 		for i in range(self.numNodes):
@@ -77,7 +97,50 @@ class Population:
 					sys.stdout.write(chr(i + 65) + " ")
 				sys.stdout.write(str(graph[i][j]) + " ")
 			print()
+			
+	def nextGen(self):	
+		for i in range(self.size):
+			print(self.population[i].vertexColors)
+		totalScore = 0
+		maxScore = self.numNodes * self.numNodes
+		scores = [0] * self.size
+		accumulated = [0] * self.size
+		for i in range(self.size):
+			scores[i] = maxScore + self.population[i].fitness()
+		scores = sorted(scores)
+		print("Best = {0}".format(scores[self.size-1]))
+		for i in range(self.size):
+			totalScore += scores[i]
+			accumulated[i] = totalScore
+		
+		newPopulation = []
+		while(len(newPopulation) < self.size):
+			j = 0
+			r = np.random.randint(0, totalScore)	
+			while(accumulated[j] < r):
+				j += 1
+			k = 0
+			r = np.random.randint(0, totalScore)	
+			while(accumulated[k] < r):
+				k += 1		
+			first = self.population[j]	
+			second = self.population[k]
+			crossed1, crossed2 = self.crossover(first,second)
+			newPopulation.append(crossed1)
+			newPopulation.append(crossed2)
+		self.population = newPopulation
+			
+		
+		
 
-graph = readFileInstance('simple.col')
-population = Population(graph, 1)
-population.beautifulGraph()
+graph = readFileInstance('flat1000_76_0.col')
+population = Population(graph, 6)
+for i in range(100):
+	print("Next Gen {0}:".format(i))
+	population.nextGen()
+	time.sleep(3)
+#population.crossover(population.population[0].vertexColors,population.population[1].vertexColors)
+# population.beautifulGraph()
+
+# test = Individual(graph,1)
+# test.mutation()
