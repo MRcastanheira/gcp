@@ -73,7 +73,7 @@ class Population:
 	def initialize(self):
 		population = []
 		for i in range(self.size):
-			individual = Individual(self.graph, 1) # 1 = mutation rate
+			individual = Individual(self.graph, 0.5) # 0.5 = mutation rate
 			population.append(individual)
 		return population
 		
@@ -107,8 +107,10 @@ class Population:
 		accumulated = [0] * self.size
 		for i in range(self.size):
 			scores[i] = maxScore + self.population[i].fitness()
-		scores = sorted(scores)
+			
+		scores, self.population = (list(x) for x in zip(*sorted(zip(scores, self.population)))) # This sorts the population list based on the order that scores got sorted
 		print("Best = {0}".format(scores[self.size-1]))
+		
 		for i in range(self.size):
 			totalScore += scores[i]
 			accumulated[i] = totalScore
@@ -136,7 +138,7 @@ class Population:
 graph = readFileInstance('flat1000_76_0.col')
 population = Population(graph, 6)
 for i in range(100):
-	print("Next Gen {0}:".format(i))
+	print("Generation {0}:".format(i))
 	population.nextGen()
 	time.sleep(3)
 #population.crossover(population.population[0].vertexColors,population.population[1].vertexColors)
