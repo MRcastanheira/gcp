@@ -36,27 +36,24 @@ def readFileInstance(file):
 	return graph
 
 class Individual:
-	def __init__(self, graph, mutationRate):
-		self.graph = graph
-		self.numNodes = len(graph[0])
-		self.vertexColors = np.random.randint(1, self.numNodes, size=self.numNodes) #creates an assortment of random colors
+	global graph
+	global edgeList
+	global numNodes
+	global numEdges
+
+	def __init__(self, mutationRate):
+		self.vertexColors = np.random.randint(1, numNodes, size=numNodes) #creates an assortment of random colors
 		self.mutationRate = mutationRate
 
 	def fitness(self):
-		maxScore = self.numNodes * self.numNodes
 		score = 0
+		edgeViolationScore = numEdges
+		for edge in edgeList:
+			if(self.vertexColors[edge[0]] == self.vertexColors[edge[1]]):
+				#print("Warning: {0} ({1}) to {2} ({3})".format(i, self.vertexColors[i], j, self.vertexColors[j]))
+				edgeViolationScore -= 1
 
-		edgeViolationScore = maxScore
-		for i in range(self.numNodes):
-			for j in range(self.numNodes):
-				if(self.graph[i][j] == 1):
-					if(self.vertexColors[i] == self.vertexColors[j]):
-						#print("Warning: {0} ({1}) to {2} ({3})".format(i, self.vertexColors[i], j, self.vertexColors[j]))
-						edgeViolationScore -= 1
-
-		#score += edgeViolationScore
-
-		normalizedColors = self.numNodes - self.validColors() + 1
+		normalizedColors = numNodes - self.validColors() + 1
 		vertexColoringScore = normalizedColors * 10
 
 		if(self.isValidSolution()):
@@ -71,18 +68,13 @@ class Individual:
 	def mutate(self):
 		r = np.random.random()
 		if(self.mutationRate > r):
-			position = np.random.randint(0, self.numNodes-1)
-			#print("New vertexColors: {0}".format(self.vertexColors))
-			#print("Vertex color at {0} before = {1}".format(position+1, self.vertexColors[position]))
-			self.vertexColors[position] = np.random.randint(1, self.numNodes)
-			#print("New vertexColors: {0}".format(self.vertexColors))
+			position = np.random.randint(0, numNodes-1)
+			self.vertexColors[position] = np.random.randint(1, numNodes)
 
 	def isValidSolution(self):
-		for i in range(self.numNodes):
-			for j in range(self.numNodes):
-				if(self.graph[i][j] == 1):
-					if(self.vertexColors[i] == self.vertexColors[j]):
-						return False
+		for edge in edgeList:
+			if(self.vertexColors[edge[0]] == self.vertexColors[edge[1]]):
+				return False
 		return True
 
 	def __str__(self):
@@ -92,9 +84,12 @@ class Individual:
 		return str(self.vertexColors) + " (" + str(self.fitness()) + ")"
 
 class Population:
-	def __init__(self, graph, size):
-		self.numNodes = len(graph[0])
-		self.graph = graph
+	global graph
+	global numNodes
+	global numEdges
+
+	def __init__(self, size):
+		numNodes = len(graph[0])
 		self.size = size
 		self.population = self.initialize()
 
@@ -111,28 +106,26 @@ class Population:
 	def initialize(self):
 		population = []
 		for i in range(self.size):
-			individual = Individual(self.graph, 0.2) # 0.2 = mutation rate
+			individual = Individual(0.2) # 0.2 = mutation rate
 			population.append(individual)
 		return population
 
 	def crossover(self, indiv1, indiv2):
 		crossedIndividual1 = deepcopy(indiv1)
 		crossedIndividual2 = deepcopy(indiv2)
-		cut = np.random.randint(1, self.numNodes-1)
-		#print("Candidates before crossover: \n {0} \n {1}".format(vertexColors1, vertexColors2))
-		for i in range(cut,self.numNodes):
+		cut = np.random.randint(1, numNodes-1)
+		for i in range(cut,numNodes):
 			crossedIndividual1.vertexColors[i], crossedIndividual2.vertexColors[i] = indiv2.vertexColors[i], indiv1.vertexColors[i]
-		#print("Candidates after crossover: \n {0} \n {1}".format(vertexColors1, vertexColors2))
 		return crossedIndividual1, crossedIndividual2
 
 	def beautifulGraph(self):
-		for i in range(self.numNodes):
+		for i in range(numNodes):
 			if(i == 0):
 				sys.stdout.write("  ")
-				for x in range(self.numNodes):
+				for x in range(numNodes):
 					sys.stdout.write(chr(x + 65) + " ")
 				print()
-			for j in range(self.numNodes):
+			for j in range(numNodes):
 				if(j == 0):
 					sys.stdout.write(chr(i + 65) + " ")
 				sys.stdout.write(str(graph[i][j]) + " ")
@@ -150,7 +143,7 @@ class Population:
 		scores, sortedPopulation = list(zip(*sorted(zip(scores, self.population),
 		 	key=lambda x: x[0])))
 		print("-------- Best so far -------")
-		print("Colors: {0}".format(sortedPopulation[self.size-1].vertexColors))
+		#print("Colors: {0}".format(sortedPopulation[self.size-1].vertexColors))
 		print("Number of colors: {0}".format(sortedPopulation[self.size-1].validColors()))
 		print("Is valid solution: {0}".format("yes" if
 			sortedPopulation[self.size-1].isValidSolution() else "no"))
@@ -216,14 +209,22 @@ class Population:
 			print("Crossover + Mutated population: \n{0}".format(self))
 			print("----------------------------")
 
-graph = readFileInstance('flat1000_76_0.col')
-population = Population(graph, 5)
-for i in range(25):
+graph = readFileInstance('simple.col') # flat1000_76_0
+numNodes = len(graph[0])
+numEdges = 0
+for i in range(numNodes):
+	for j in range(i+1, numNodes):
+		if(graph[i][j] == 1):
+			numEdges += 1
+
+edgeList = []
+for i in range(numNodes):
+	for j in range(i+1, numNodes):
+		if(graph[i][j] == 1):
+			edgeList.append([i,j])
+
+population = Population(5)
+for i in range(100):
 	print("Generation {0}:".format(i))
 	population.nextGen()
-	#time.sleep(0)
-#population.crossover(population.population[0].vertexColors,population.population[1].vertexColors)
-# population.beautifulGraph()
-
-# test = Individual(graph,1)
-# test.mutation()
+	time.sleep(0)
