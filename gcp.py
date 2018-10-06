@@ -124,25 +124,37 @@ class Population:
 			self.population[self.size-1].isValidSolution() else "no"))
 		print("Best = {0}".format(scores[self.size-1]))
 
+		# compute cumulative score
 		for i in range(self.size):
 			totalScore += scores[i]
 			accumulated[i] = totalScore
 
+		# generatae new population
 		newPopulation = []
 		while(len(newPopulation) < self.size):
-			j = 0
-			r = np.random.randint(0, totalScore)
-			while(accumulated[j] < r):
-				j += 1
-			k = 0
-			r = np.random.randint(0, totalScore)
-			while(accumulated[k] < r):
-				k += 1
-			first = self.population[j]
-			second = self.population[k]
-			crossed1, crossed2 = self.crossover(first,second)
-			newPopulation.append(crossed1)
-			newPopulation.append(crossed2)
+			# first random individual
+			firstRandomRange = np.random.randint(0, totalScore)
+			firstIndex = 0
+			while(accumulated[firstIndex] < firstRandomRange):
+				firstIndex += 1
+
+			firstIndividual = self.population[firstIndex]
+
+			# second random individual
+			secondRandomRange = np.random.randint(0, totalScore)
+			secondIndex = 0
+			while(accumulated[secondIndex] < secondRandomRange):
+				secondIndex += 1
+
+			secondIndividual = self.population[secondIndex]
+
+			# do crossover
+			firstCrossed, secondCrossed = self.crossover(firstIndividual, secondIndividual)
+
+			# add to new population
+			newPopulation.append(firstCrossed)
+			newPopulation.append(secondCrossed)
+
 		self.population = newPopulation
 
 graph = readFileInstance('simple.col')
