@@ -2,6 +2,7 @@ import fileinput
 import sys
 import numpy as np
 import time
+from copy import deepcopy
 
 def readFileInstance(file):
 	nodes = 0
@@ -40,16 +41,23 @@ class Individual:
 		self.mutationRate = mutationRate
 
 	def fitness(self):
-		score = 0
+		maxScore = self.numNodes * self.numNodes
+		score = maxScore
 		for i in range(self.numNodes):
 			for j in range(self.numNodes):
 				if(self.graph[i][j] == 1):
 					if(self.vertexColors[i] == self.vertexColors[j]):
 						#print("Warning: {0} ({1}) to {2} ({3})".format(i, self.vertexColors[i], j, self.vertexColors[j]))
 						score -= 1
+		if(self.isValidSolution()):
+			normalizedColors = self.numNodes - self.validColors() + 1
+			score = score + normalizedColors * 50
 		return score
+		
+	def validColors(self):
+		return len(np.unique(self.vertexColors))			
 
-	def mutation(self):
+	def mutate(self):
 		r = np.random.random()
 		if(self.mutationRate > r):
 			position = np.random.randint(0, self.numNodes-1)
@@ -80,7 +88,7 @@ class Population:
 	def initialize(self):
 		population = []
 		for i in range(self.size):
-			individual = Individual(self.graph, 0.5) # 0.5 = mutation rate
+			individual = Individual(self.graph, 0.2) # 0.2 = mutation rate
 			population.append(individual)
 		return population
 
@@ -105,23 +113,27 @@ class Population:
 				sys.stdout.write(str(graph[i][j]) + " ")
 			print()
 
-	def nextGen(self):
+	def nextGen(self):	
+		print("Population before:")
+		for i in range(self.size):
+			print(self.population[i].vertexColors)
 		#for i in range(self.size):
 		#	print(self.population[i].vertexColors)
 		totalScore = 0
-		maxScore = self.numNodes * self.numNodes
 		scores = [0] * self.size
 		accumulated = [0] * self.size
+		
 		for i in range(self.size):
-			scores[i] = maxScore + self.population[i].fitness()
+			scores[i] = self.population[i].fitness()
 
 		# Sort score population pairs list based on the score
-		scores, self.population = list(zip(*sorted(zip(scores, self.population),
+		scores, sortedPopulation = list(zip(*sorted(zip(scores, self.population),
 		 	key=lambda x: x[0])))
 		print("-------- Best so far -------")
-		print("Colors: {0}".format(self.population[self.size-1].vertexColors))
+		print("Colors: {0}".format(sortedPopulation[self.size-1].vertexColors))
+		print("Number of colors: {0}".format(sortedPopulation[self.size-1].validColors()))		
 		print("Is valid solution: {0}".format("yes" if
-			self.population[self.size-1].isValidSolution() else "no"))
+			sortedPopulation[self.size-1].isValidSolution() else "no"))
 		print("Best = {0}".format(scores[self.size-1]))
 
 		# compute cumulative score
@@ -138,7 +150,7 @@ class Population:
 			while(accumulated[firstIndex] < firstRandomRange):
 				firstIndex += 1
 
-			firstIndividual = self.population[firstIndex]
+			firstIndividual = sortedPopulation[firstIndex]
 
 			# second random individual
 			secondRandomRange = np.random.randint(0, totalScore)
@@ -146,7 +158,7 @@ class Population:
 			while(accumulated[secondIndex] < secondRandomRange):
 				secondIndex += 1
 
-			secondIndividual = self.population[secondIndex]
+			secondIndividual = sortedPopulation[secondIndex]
 
 			# do crossover
 			firstCrossed, secondCrossed = self.crossover(firstIndividual, secondIndividual)
@@ -154,12 +166,21 @@ class Population:
 			# add to new population
 			newPopulation.append(firstCrossed)
 			newPopulation.append(secondCrossed)
+			
+		for i in range(self.size):
+			newPopulation[i].mutate()
 
-		self.population = newPopulation
+		print("Population before:")
+		for i in range(self.size):
+			print(self.population[i].vertexColors)
+		self.population = deepcopy(newPopulation)
+		print("Population after:")
+		for i in range(self.size):
+			print(self.population[i].vertexColors)
 
 graph = readFileInstance('simple.col')
-population = Population(graph, 20)
-for i in range(100):
+population = Population(graph, 10)
+for i in range(10):
 	print("Generation {0}:".format(i))
 	population.nextGen()
 	#time.sleep(0)
