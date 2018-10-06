@@ -48,7 +48,7 @@ class Individual:
 						#print("Warning: {0} ({1}) to {2} ({3})".format(i, self.vertexColors[i], j, self.vertexColors[j]))
 						score -= 1
 		return score
-		
+
 	def mutation(self):
 		r = np.random.random()
 		if(self.mutationRate > r):
@@ -57,7 +57,14 @@ class Individual:
 			#print("Vertex color at {0} before = {1}".format(position+1, self.vertexColors[position]))
 			self.vertexColors[position] = np.random.randint(1, self.numNodes)
 			#print("New vertexColors: {0}".format(self.vertexColors))
-		
+
+	def isValidSolution(self):
+		for i in range(self.numNodes):
+			for j in range(self.numNodes):
+				if(self.graph[i][j] == 1):
+					if(self.vertexColors[i] == self.vertexColors[j]):
+						return False
+		return True
 
 class Population:
 	def __init__(self, graph, size):
@@ -76,7 +83,7 @@ class Population:
 			individual = Individual(self.graph, 0.5) # 0.5 = mutation rate
 			population.append(individual)
 		return population
-		
+
 	def crossover(self, indiv1, indiv2):
 		cut = np.random.randint(1, self.numNodes-1)
 		#print("Candidates before crossover: \n {0} \n {1}".format(vertexColors1, vertexColors2))
@@ -97,50 +104,53 @@ class Population:
 					sys.stdout.write(chr(i + 65) + " ")
 				sys.stdout.write(str(graph[i][j]) + " ")
 			print()
-			
-	def nextGen(self):	
-		for i in range(self.size):
-			print(self.population[i].vertexColors)
+
+	def nextGen(self):
+		#for i in range(self.size):
+		#	print(self.population[i].vertexColors)
 		totalScore = 0
 		maxScore = self.numNodes * self.numNodes
 		scores = [0] * self.size
 		accumulated = [0] * self.size
 		for i in range(self.size):
 			scores[i] = maxScore + self.population[i].fitness()
-			
-		scores, self.population = (list(x) for x in zip(*sorted(zip(scores, self.population)))) # This sorts the population list based on the order that scores got sorted
+
+		# Sort score population pairs list based on the score
+		scores, self.population = list(zip(*sorted(zip(scores, self.population),
+		 	key=lambda x: x[0])))
+		print("-------- Best so far -------")
+		print("Colors: {0}".format(self.population[self.size-1].vertexColors))
+		print("Is valid solution: {0}".format("yes" if
+			self.population[self.size-1].isValidSolution() else "no"))
 		print("Best = {0}".format(scores[self.size-1]))
-		
+
 		for i in range(self.size):
 			totalScore += scores[i]
 			accumulated[i] = totalScore
-		
+
 		newPopulation = []
 		while(len(newPopulation) < self.size):
 			j = 0
-			r = np.random.randint(0, totalScore)	
+			r = np.random.randint(0, totalScore)
 			while(accumulated[j] < r):
 				j += 1
 			k = 0
-			r = np.random.randint(0, totalScore)	
+			r = np.random.randint(0, totalScore)
 			while(accumulated[k] < r):
-				k += 1		
-			first = self.population[j]	
+				k += 1
+			first = self.population[j]
 			second = self.population[k]
 			crossed1, crossed2 = self.crossover(first,second)
 			newPopulation.append(crossed1)
 			newPopulation.append(crossed2)
 		self.population = newPopulation
-			
-		
-		
 
 graph = readFileInstance('simple.col')
 population = Population(graph, 20)
 for i in range(100):
 	print("Generation {0}:".format(i))
 	population.nextGen()
-	time.sleep(3)
+	#time.sleep(0)
 #population.crossover(population.population[0].vertexColors,population.population[1].vertexColors)
 # population.beautifulGraph()
 
