@@ -4,6 +4,8 @@ import numpy as np
 import time
 from copy import deepcopy
 
+DEBUG = 0
+
 def readFileInstance(file):
 	nodes = 0
 	edges = 0
@@ -42,20 +44,29 @@ class Individual:
 
 	def fitness(self):
 		maxScore = self.numNodes * self.numNodes
-		score = maxScore
+		score = 0
+
+		edgeViolationScore = maxScore
 		for i in range(self.numNodes):
 			for j in range(self.numNodes):
 				if(self.graph[i][j] == 1):
 					if(self.vertexColors[i] == self.vertexColors[j]):
 						#print("Warning: {0} ({1}) to {2} ({3})".format(i, self.vertexColors[i], j, self.vertexColors[j]))
-						score -= 1
+						edgeViolationScore -= 1
+
+		#score += edgeViolationScore
+
+		normalizedColors = self.numNodes - self.validColors() + 1
+		vertexColoringScore = normalizedColors * 10
+
 		if(self.isValidSolution()):
-			normalizedColors = self.numNodes - self.validColors() + 1
-			score = score + normalizedColors * 50
+			score += edgeViolationScore + vertexColoringScore
+		else:
+			score += edgeViolationScore + (vertexColoringScore / 2)
 		return score
-		
+
 	def validColors(self):
-		return len(np.unique(self.vertexColors))			
+		return len(np.unique(self.vertexColors))
 
 	def mutate(self):
 		r = np.random.random()
@@ -74,6 +85,12 @@ class Individual:
 						return False
 		return True
 
+	def __str__(self):
+		return self.visual()
+
+	def visual(self):
+		return str(self.vertexColors) + " (" + str(self.fitness()) + ")"
+
 class Population:
 	def __init__(self, graph, size):
 		self.numNodes = len(graph[0])
@@ -85,6 +102,12 @@ class Population:
 			print("Node {0} colors: {1}".format(i, individual.vertexColors))
 			individual.fitness()
 
+	def __str__(self):
+		pop = ""
+		for i in self.population:
+			pop += i.visual() + "\n"
+		return pop
+
 	def initialize(self):
 		population = []
 		for i in range(self.size):
@@ -93,12 +116,14 @@ class Population:
 		return population
 
 	def crossover(self, indiv1, indiv2):
+		crossedIndividual1 = deepcopy(indiv1)
+		crossedIndividual2 = deepcopy(indiv2)
 		cut = np.random.randint(1, self.numNodes-1)
 		#print("Candidates before crossover: \n {0} \n {1}".format(vertexColors1, vertexColors2))
 		for i in range(cut,self.numNodes):
-			indiv1.vertexColors[i], indiv2.vertexColors[i] = indiv2.vertexColors[i], indiv1.vertexColors[i]
+			crossedIndividual1.vertexColors[i], crossedIndividual2.vertexColors[i] = indiv2.vertexColors[i], indiv1.vertexColors[i]
 		#print("Candidates after crossover: \n {0} \n {1}".format(vertexColors1, vertexColors2))
-		return indiv1,indiv2
+		return crossedIndividual1, crossedIndividual2
 
 	def beautifulGraph(self):
 		for i in range(self.numNodes):
@@ -113,16 +138,11 @@ class Population:
 				sys.stdout.write(str(graph[i][j]) + " ")
 			print()
 
-	def nextGen(self):	
-		print("Population before:")
-		for i in range(self.size):
-			print(self.population[i].vertexColors)
-		#for i in range(self.size):
-		#	print(self.population[i].vertexColors)
+	def nextGen(self):
 		totalScore = 0
 		scores = [0] * self.size
 		accumulated = [0] * self.size
-		
+
 		for i in range(self.size):
 			scores[i] = self.population[i].fitness()
 
@@ -131,7 +151,7 @@ class Population:
 		 	key=lambda x: x[0])))
 		print("-------- Best so far -------")
 		print("Colors: {0}".format(sortedPopulation[self.size-1].vertexColors))
-		print("Number of colors: {0}".format(sortedPopulation[self.size-1].validColors()))		
+		print("Number of colors: {0}".format(sortedPopulation[self.size-1].validColors()))
 		print("Is valid solution: {0}".format("yes" if
 			sortedPopulation[self.size-1].isValidSolution() else "no"))
 		print("Best = {0}".format(scores[self.size-1]))
@@ -141,7 +161,21 @@ class Population:
 			totalScore += scores[i]
 			accumulated[i] = totalScore
 
-		# generatae new population
+		probs = [0] * self.size
+		for i in range(self.size):
+			probs[i] = (scores[i] / totalScore) * 100
+
+		if DEBUG == 1:
+			print("Input population (sorted):")
+			for i in range(self.size):
+				validity = "valid" if sortedPopulation[i].isValidSolution() else "invalid"
+				print(str(sortedPopulation[i].vertexColors) +
+				" (" + str(sortedPopulation[i].validColors()) + ")" +
+				" " + str(validity) +
+				" - " + str(scores[i]) + " / " + str(totalScore) +
+				" (" + str(round(probs[i], 2)) + "%)")
+
+		# generate a new population
 		newPopulation = []
 		while(len(newPopulation) < self.size):
 			# first random individual
@@ -166,21 +200,25 @@ class Population:
 			# add to new population
 			newPopulation.append(firstCrossed)
 			newPopulation.append(secondCrossed)
-			
+
+		if DEBUG == 1:
+			print("Crossover population:")
+			for i in range(self.size):
+				print(newPopulation[i])
+
+		# do mutation
 		for i in range(self.size):
 			newPopulation[i].mutate()
 
-		print("Population before:")
-		for i in range(self.size):
-			print(self.population[i].vertexColors)
-		self.population = deepcopy(newPopulation)
-		print("Population after:")
-		for i in range(self.size):
-			print(self.population[i].vertexColors)
+		self.population = newPopulation
 
-graph = readFileInstance('simple.col')
-population = Population(graph, 10)
-for i in range(10):
+		if DEBUG == 1:
+			print("Crossover + Mutated population: \n{0}".format(self))
+			print("----------------------------")
+
+graph = readFileInstance('flat1000_76_0.col')
+population = Population(graph, 5)
+for i in range(25):
 	print("Generation {0}:".format(i))
 	population.nextGen()
 	#time.sleep(0)
