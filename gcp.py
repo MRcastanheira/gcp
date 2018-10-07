@@ -76,12 +76,12 @@ class Individual:
 			r = np.random.random()
 			if(self.mutationRate > r):
 				self.vertexColors[position] = np.random.randint(1, numNodes+1)
-		#print(self.vertexColors)
-		#print("-------------")
+		# print(self.vertexColors)
+		# print("-------------")
 		# if(self.mutationRate > r):
-		# 	for i in range(np.random.randint(0, numNodes+1)):
-		# 		position = np.random.randint(0, numNodes)
-		# 		self.vertexColors[position] = np.random.randint(1, numNodes+1)
+			# for i in range(np.random.randint(0, numNodes+1)):
+				# position = np.random.randint(0, numNodes)
+				# self.vertexColors[position] = np.random.randint(1, numNodes+1)
 
 	#@profile
 	def isValidSolution(self):
@@ -177,7 +177,26 @@ class Population:
 
 		# generate a new population
 		newPopulation = []
-		while(len(newPopulation) < self.size-1):
+		while(len(newPopulation) < self.size-1):		
+#========================= Roulette Wheel Selection ===============================
+			# # first random individual
+			# firstRandomRange = np.random.randint(0, totalScore+1)
+			# firstIndex = 0
+			# while(accumulated[firstIndex] < firstRandomRange):
+				# firstIndex += 1
+
+			# firstIndividual = sortedPopulation[firstIndex]
+
+			# # second random individual
+			# secondRandomRange = np.random.randint(0, totalScore+1)
+			# secondIndex = 0
+			# while(accumulated[secondIndex] < secondRandomRange):
+				# secondIndex += 1
+
+			# secondIndividual = sortedPopulation[secondIndex]
+#==================================================================================
+			
+#========================= Stochastic Universal Sampling ==========================
 			# first random individual
 			firstRandomRange = np.random.randint(0, totalScore+1)
 			firstIndex = 0
@@ -187,25 +206,24 @@ class Population:
 			firstIndividual = sortedPopulation[firstIndex]
 
 			# second random individual
-			secondRandomRange = np.random.randint(0, totalScore+1)
-			secondIndex = 0
-			while(accumulated[secondIndex] < secondRandomRange):
-				secondIndex += 1
-
+			secondIndex = int((self.size / 2 + firstIndex) % self.size)
 			secondIndividual = sortedPopulation[secondIndex]
 
 			# do crossover
 			firstCrossed, secondCrossed = self.crossover(firstIndividual, secondIndividual, numNodes)
+#==================================================================================
 
 			# add to new population
 			newPopulation.append(firstCrossed)
 			if(len(newPopulation) < self.size-1):
 				newPopulation.append(secondCrossed)
 
+#===================================== DEBUG ======================================
 		if DEBUG == 1:
 			print("Crossover population:")
 			for i in range(self.size-1):
 				print(newPopulation[i])
+#==================================================================================
 
 		# do mutation
 		for i in range(len(newPopulation)):
@@ -221,10 +239,10 @@ class Population:
 			print("----------------------------")
 #==================================================================================
 
-graph, edgeList, numNodes, numEdges = readFileInstance('flat1000_76_0.col') # flat1000_76_0 simple complicated
+graph, edgeList, numNodes, numEdges = readFileInstance('complicated.col') # flat1000_76_0 simple complicated
 
-populationSize = 5
-generations = 100
+populationSize = 20
+generations = 200
 mutationRate = 0.05
 
 population = Population(populationSize, mutationRate, crossoverOperators.crossover)
