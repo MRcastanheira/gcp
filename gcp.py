@@ -68,8 +68,9 @@ class Individual:
 	def mutate(self):
 		r = np.random.random()
 		if(self.mutationRate > r):
-			position = np.random.randint(0, numNodes)
-			self.vertexColors[position] = np.random.randint(1, numNodes+1)
+			for i in range(np.random.randint(0, numNodes+1)):
+				position = np.random.randint(0, numNodes)
+				self.vertexColors[position] = np.random.randint(1, numNodes+1)
 
 	def isValidSolution(self):
 		for edge in edgeList:
@@ -106,7 +107,7 @@ class Population:
 	def initialize(self):
 		population = []
 		for i in range(self.size):
-			individual = Individual(0.2) # 0.2 = mutation rate
+			individual = Individual(0.05) # 0.05 = mutation rate
 			population.append(individual)
 		return population
 
@@ -142,6 +143,7 @@ class Population:
 		# Sort score population pairs list based on the score
 		scores, sortedPopulation = list(zip(*sorted(zip(scores, self.population),
 		 	key=lambda x: x[0])))
+		best = deepcopy(sortedPopulation[-1])
 			
 #===================================== PRINTS =====================================
 		print("-------- Best so far -------")
@@ -149,7 +151,7 @@ class Population:
 		print("Number of colors: {0}".format(sortedPopulation[self.size-1].validColors()))
 		print("Is valid solution: {0}".format("yes" if
 			sortedPopulation[self.size-1].isValidSolution() else "no"))
-		print("Best = {0}".format(scores[self.size-1]))
+		print("Best = {0}".format(best.fitness()))
 #==================================================================================
 
 		# compute cumulative score
@@ -175,9 +177,7 @@ class Population:
 
 		# generate a new population
 		newPopulation = []
-		# newPopulation.append(sortedPopulation[-1])
-		# newPopulation.append(sortedPopulation[-2])
-		while(len(newPopulation) < self.size-2):
+		while(len(newPopulation) < self.size-1):
 			# first random individual
 			firstRandomRange = np.random.randint(0, totalScore+1)
 			firstIndex = 0
@@ -199,25 +199,25 @@ class Population:
 
 			# add to new population
 			newPopulation.append(firstCrossed)
-			newPopulation.append(secondCrossed)
+			if(len(newPopulation) < self.size-1):
+				newPopulation.append(secondCrossed)
 
 		if DEBUG == 1:
 			print("Crossover population:")
-			for i in range(self.size-2):
+			for i in range(self.size-1):
 				print(newPopulation[i])
-
+			
 		# do mutation
-		for i in range(self.size-2):
+		for i in range(len(newPopulation)):
 			newPopulation[i].mutate()
 		
-		newPopulation.append(sortedPopulation[-1])
-		newPopulation.append(sortedPopulation[-2])
+		newPopulation.append(best)
 
-		self.population = newPopulation
+		self.population = deepcopy(newPopulation)
 		
 #===================================== DEBUG ======================================
 		if DEBUG == 1:
-			print("Crossover + Mutated population: \n{0}".format(self))
+			print("Crossover + Mutated population: ")#{0}".format(self))		
 			print("----------------------------")
 #==================================================================================
 
@@ -235,8 +235,8 @@ for i in range(numNodes):
 		if(graph[i][j] == 1):
 			edgeList.append([i,j])
 
-population = Population(50)
-for i in range(100):
+population = Population(30)
+for i in range(1000):
 	print("Generation {0}:".format(i))
 	population.nextGen()
 	time.sleep(0)
