@@ -71,11 +71,17 @@ class Individual:
 		return len(np.unique(self.vertexColors))
 
 	def mutate(self):
-		r = np.random.random()
-		if(self.mutationRate > r):
-			for i in range(np.random.randint(0, numNodes+1)):
-				position = np.random.randint(0, numNodes)
+		#print(self.vertexColors)
+		for position in range(numNodes):
+			r = np.random.random()
+			if(self.mutationRate > r):
 				self.vertexColors[position] = np.random.randint(1, numNodes+1)
+		#print(self.vertexColors)
+		#print("-------------")
+		# if(self.mutationRate > r):
+		# 	for i in range(np.random.randint(0, numNodes+1)):
+		# 		position = np.random.randint(0, numNodes)
+		# 		self.vertexColors[position] = np.random.randint(1, numNodes+1)
 
 	#@profile
 	def isValidSolution(self):
@@ -215,11 +221,11 @@ class Population:
 			print("----------------------------")
 #==================================================================================
 
-graph, edgeList, numNodes, numEdges = readFileInstance('dsjc500.1.col') # flat1000_76_0 simple complicated
+graph, edgeList, numNodes, numEdges = readFileInstance('flat1000_76_0.col') # flat1000_76_0 simple complicated
 
-populationSize = 50
-generations = 10000
-mutationRate = 0.01
+populationSize = 5
+generations = 100
+mutationRate = 0.05
 
 population = Population(populationSize, mutationRate, crossoverOperators.crossover)
 for i in range(1, generations+1):
