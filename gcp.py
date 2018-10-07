@@ -4,6 +4,8 @@ import numpy as np
 import time
 from copy import deepcopy
 
+import crossoverOperators
+
 DEBUG = 0
 
 def readFileInstance(file):
@@ -24,6 +26,7 @@ def readFileInstance(file):
 			inputEdges.append([fromVertex, toVertex])
 
 	graph = [0] * nodes
+	edgeList = []
 	for j in range(nodes):
 		graph[j] = [0] * nodes
 
@@ -32,8 +35,9 @@ def readFileInstance(file):
 		i = x[1] - 1
 		graph[j][i] = 1
 		graph[i][j] = 1
+		edgeList.append([i,j])
 
-	return graph
+	return graph, edgeList, nodes, edges
 
 class Individual:
 	global graph
@@ -44,6 +48,7 @@ class Individual:
 	def __init__(self, mutationRate):
 		self.vertexColors = np.random.randint(1, numNodes+1, size=numNodes) #creates an assortment of random colors
 		self.mutationRate = mutationRate
+
 
 	def fitness(self):
 		score = 0
@@ -89,14 +94,15 @@ class Population:
 	global numNodes
 	global numEdges
 
-	def __init__(self, size):
+	def __init__(self, size, mutationRate, crossoverMethod):
 		numNodes = len(graph[0])
 		self.size = size
-		self.population = self.initialize()
+		self.population = self.initialize(mutationRate)
+		self.crossover = crossoverMethod
 
-		for i, individual in enumerate(self.population):
-			print("Node {0} colors: {1}".format(i, individual.vertexColors))
-			individual.fitness()
+		# for i, individual in enumerate(self.population):
+		# 	print("Node {0} colors: {1}".format(i, individual.vertexColors))
+		# 	individual.fitness()
 
 	def __str__(self):
 		pop = ""
@@ -104,20 +110,12 @@ class Population:
 			pop += i.visual() + "\n"
 		return pop
 
-	def initialize(self):
+	def initialize(self, mutationRate):
 		population = []
 		for i in range(self.size):
-			individual = Individual(0.05) # 0.05 = mutation rate
+			individual = Individual(mutationRate)
 			population.append(individual)
 		return population
-
-	def crossover(self, indiv1, indiv2):
-		crossedIndividual1 = deepcopy(indiv1)
-		crossedIndividual2 = deepcopy(indiv2)
-		cut = np.random.randint(1, numNodes-1)
-		for i in range(cut,numNodes):
-			crossedIndividual1.vertexColors[i], crossedIndividual2.vertexColors[i] = indiv2.vertexColors[i], indiv1.vertexColors[i]
-		return crossedIndividual1, crossedIndividual2
 
 	def beautifulGraph(self):
 		for i in range(numNodes):
@@ -144,14 +142,14 @@ class Population:
 		scores, sortedPopulation = list(zip(*sorted(zip(scores, self.population),
 		 	key=lambda x: x[0])))
 		best = deepcopy(sortedPopulation[-1])
-			
+
 #===================================== PRINTS =====================================
 		print("-------- Best so far -------")
 		#print("Colors: {0}".format(sortedPopulation[self.size-1].vertexColors))
 		print("Number of colors: {0}".format(sortedPopulation[self.size-1].validColors()))
 		print("Is valid solution: {0}".format("yes" if
 			sortedPopulation[self.size-1].isValidSolution() else "no"))
-		print("Best = {0}".format(best.fitness()))
+		print("Best = {0}".format(scores[self.size-1]))
 #==================================================================================
 
 		# compute cumulative score
@@ -195,7 +193,7 @@ class Population:
 			secondIndividual = sortedPopulation[secondIndex]
 
 			# do crossover
-			firstCrossed, secondCrossed = self.crossover(firstIndividual, secondIndividual)
+			firstCrossed, secondCrossed = self.crossover(firstIndividual, secondIndividual, numNodes)
 
 			# add to new population
 			newPopulation.append(firstCrossed)
@@ -206,37 +204,28 @@ class Population:
 			print("Crossover population:")
 			for i in range(self.size-1):
 				print(newPopulation[i])
-			
+
 		# do mutation
 		for i in range(len(newPopulation)):
 			newPopulation[i].mutate()
-		
+
 		newPopulation.append(best)
 
 		self.population = deepcopy(newPopulation)
-		
+
 #===================================== DEBUG ======================================
 		if DEBUG == 1:
-			print("Crossover + Mutated population: ")#{0}".format(self))		
+			print("Crossover + Mutated population: ")#{0}".format(self))
 			print("----------------------------")
 #==================================================================================
 
-graph = readFileInstance('flat1000_76_0.col') # flat1000_76_0 simple complicated
-numNodes = len(graph[0])
-numEdges = 0
-for i in range(numNodes):
-	for j in range(i+1, numNodes):
-		if(graph[i][j] == 1):
-			numEdges += 1
+graph, edgeList, numNodes, numEdges = readFileInstance('flat1000_76_0.col') # flat1000_76_0 simple complicated
 
-edgeList = []
-for i in range(numNodes):
-	for j in range(i+1, numNodes):
-		if(graph[i][j] == 1):
-			edgeList.append([i,j])
+populationSize = 30
+generations = 25
+mutationRate = 0.2
 
-population = Population(30)
-for i in range(1000):
+population = Population(populationSize, mutationRate, crossoverOperators.crossover)
+for i in range(1, generations+1):
 	print("Generation {0}:".format(i))
 	population.nextGen()
-	time.sleep(0)
