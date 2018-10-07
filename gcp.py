@@ -42,7 +42,7 @@ class Individual:
 	global numEdges
 
 	def __init__(self, mutationRate):
-		self.vertexColors = np.random.randint(1, numNodes, size=numNodes) #creates an assortment of random colors
+		self.vertexColors = np.random.randint(1, numNodes+1, size=numNodes) #creates an assortment of random colors
 		self.mutationRate = mutationRate
 
 	def fitness(self):
@@ -68,8 +68,8 @@ class Individual:
 	def mutate(self):
 		r = np.random.random()
 		if(self.mutationRate > r):
-			position = np.random.randint(0, numNodes-1)
-			self.vertexColors[position] = np.random.randint(1, numNodes)
+			position = np.random.randint(0, numNodes)
+			self.vertexColors[position] = np.random.randint(1, numNodes+1)
 
 	def isValidSolution(self):
 		for edge in edgeList:
@@ -142,12 +142,15 @@ class Population:
 		# Sort score population pairs list based on the score
 		scores, sortedPopulation = list(zip(*sorted(zip(scores, self.population),
 		 	key=lambda x: x[0])))
+			
+#===================================== PRINTS =====================================
 		print("-------- Best so far -------")
 		#print("Colors: {0}".format(sortedPopulation[self.size-1].vertexColors))
 		print("Number of colors: {0}".format(sortedPopulation[self.size-1].validColors()))
 		print("Is valid solution: {0}".format("yes" if
 			sortedPopulation[self.size-1].isValidSolution() else "no"))
 		print("Best = {0}".format(scores[self.size-1]))
+#==================================================================================
 
 		# compute cumulative score
 		for i in range(self.size):
@@ -158,6 +161,7 @@ class Population:
 		for i in range(self.size):
 			probs[i] = (scores[i] / totalScore) * 100
 
+#===================================== DEBUG ======================================
 		if DEBUG == 1:
 			print("Input population (sorted):")
 			for i in range(self.size):
@@ -167,12 +171,15 @@ class Population:
 				" " + str(validity) +
 				" - " + str(scores[i]) + " / " + str(totalScore) +
 				" (" + str(round(probs[i], 2)) + "%)")
+#==================================================================================
 
 		# generate a new population
 		newPopulation = []
-		while(len(newPopulation) < self.size):
+		# newPopulation.append(sortedPopulation[-1])
+		# newPopulation.append(sortedPopulation[-2])
+		while(len(newPopulation) < self.size-2):
 			# first random individual
-			firstRandomRange = np.random.randint(0, totalScore)
+			firstRandomRange = np.random.randint(0, totalScore+1)
 			firstIndex = 0
 			while(accumulated[firstIndex] < firstRandomRange):
 				firstIndex += 1
@@ -180,7 +187,7 @@ class Population:
 			firstIndividual = sortedPopulation[firstIndex]
 
 			# second random individual
-			secondRandomRange = np.random.randint(0, totalScore)
+			secondRandomRange = np.random.randint(0, totalScore+1)
 			secondIndex = 0
 			while(accumulated[secondIndex] < secondRandomRange):
 				secondIndex += 1
@@ -196,20 +203,25 @@ class Population:
 
 		if DEBUG == 1:
 			print("Crossover population:")
-			for i in range(self.size):
+			for i in range(self.size-2):
 				print(newPopulation[i])
 
 		# do mutation
-		for i in range(self.size):
+		for i in range(self.size-2):
 			newPopulation[i].mutate()
+		
+		newPopulation.append(sortedPopulation[-1])
+		newPopulation.append(sortedPopulation[-2])
 
 		self.population = newPopulation
-
+		
+#===================================== DEBUG ======================================
 		if DEBUG == 1:
 			print("Crossover + Mutated population: \n{0}".format(self))
 			print("----------------------------")
+#==================================================================================
 
-graph = readFileInstance('simple.col') # flat1000_76_0
+graph = readFileInstance('flat1000_76_0.col') # flat1000_76_0 simple complicated
 numNodes = len(graph[0])
 numEdges = 0
 for i in range(numNodes):
@@ -223,7 +235,7 @@ for i in range(numNodes):
 		if(graph[i][j] == 1):
 			edgeList.append([i,j])
 
-population = Population(5)
+population = Population(50)
 for i in range(100):
 	print("Generation {0}:".format(i))
 	population.nextGen()
