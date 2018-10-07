@@ -1,7 +1,7 @@
 import numpy as np
 from copy import deepcopy
 
-@profile
+#@profile
 def crossover(indiv1, indiv2, numNodes):
 	crossedIndividual1 = deepcopy(indiv1)
 	crossedIndividual2 = deepcopy(indiv2)

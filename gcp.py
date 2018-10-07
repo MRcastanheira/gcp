@@ -49,7 +49,7 @@ class Individual:
 		self.vertexColors = np.random.randint(1, numNodes+1, size=numNodes) #creates an assortment of random colors
 		self.mutationRate = mutationRate
 
-
+	#@profile
 	def fitness(self):
 		score = 0
 		edgeViolationScore = numEdges
@@ -77,6 +77,7 @@ class Individual:
 				position = np.random.randint(0, numNodes)
 				self.vertexColors[position] = np.random.randint(1, numNodes+1)
 
+	#@profile
 	def isValidSolution(self):
 		for edge in edgeList:
 			if(self.vertexColors[edge[0]] == self.vertexColors[edge[1]]):
@@ -99,10 +100,6 @@ class Population:
 		self.size = size
 		self.population = self.initialize(mutationRate)
 		self.crossover = crossoverMethod
-
-		# for i, individual in enumerate(self.population):
-		# 	print("Node {0} colors: {1}".format(i, individual.vertexColors))
-		# 	individual.fitness()
 
 	def __str__(self):
 		pop = ""
@@ -157,12 +154,11 @@ class Population:
 			totalScore += scores[i]
 			accumulated[i] = totalScore
 
-		probs = [0] * self.size
-		for i in range(self.size):
-			probs[i] = (scores[i] / totalScore) * 100
-
 #===================================== DEBUG ======================================
 		if DEBUG == 1:
+			probs = [0] * self.size
+			for i in range(self.size):
+				probs[i] = (scores[i] / totalScore) * 100
 			print("Input population (sorted):")
 			for i in range(self.size):
 				validity = "valid" if sortedPopulation[i].isValidSolution() else "invalid"
@@ -211,19 +207,19 @@ class Population:
 
 		newPopulation.append(best)
 
-		self.population = deepcopy(newPopulation)
+		self.population = newPopulation
 
 #===================================== DEBUG ======================================
 		if DEBUG == 1:
-			print("Crossover + Mutated population: ")#{0}".format(self))
+			print("Crossover + Mutated population: \n{0}".format(self))
 			print("----------------------------")
 #==================================================================================
 
-graph, edgeList, numNodes, numEdges = readFileInstance('flat1000_76_0.col') # flat1000_76_0 simple complicated
+graph, edgeList, numNodes, numEdges = readFileInstance('dsjc500.1.col') # flat1000_76_0 simple complicated
 
-populationSize = 30
-generations = 25
-mutationRate = 0.2
+populationSize = 50
+generations = 10000
+mutationRate = 0.01
 
 population = Population(populationSize, mutationRate, crossoverOperators.crossover)
 for i in range(1, generations+1):
