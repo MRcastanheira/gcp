@@ -7,6 +7,7 @@ from copy import deepcopy
 import crossoverOperators
 
 DEBUG = 0
+CROSSOVER = 1
 
 def readFileInstance(file):
 	nodes = 0
@@ -82,6 +83,14 @@ class Individual:
 			# for i in range(np.random.randint(0, numNodes+1)):
 				# position = np.random.randint(0, numNodes)
 				# self.vertexColors[position] = np.random.randint(1, numNodes+1)
+				
+		# mutate only conflicting nodes. Doesn't work		
+		# r = np.random.random()
+		# if (self.mutationRate > r):
+			# for edge in edgeList:
+				# if(self.vertexColors[edge[0]] == self.vertexColors[edge[1]]):
+					# self.vertexColors[edge[0]] = np.random.randint(1, numNodes+1)
+					# self.vertexColors[edge[1]] = np.random.randint(1, numNodes+1)
 
 	#@profile
 	def isValidSolution(self):
@@ -208,15 +217,20 @@ class Population:
 			# second random individual
 			secondIndex = int((self.size / 2 + firstIndex) % self.size)
 			secondIndividual = sortedPopulation[secondIndex]
-
-			# do crossover
-			firstCrossed, secondCrossed = self.crossover(firstIndividual, secondIndividual, numNodes)
 #==================================================================================
 
-			# add to new population
-			newPopulation.append(firstCrossed)
-			if(len(newPopulation) < self.size-1):
-				newPopulation.append(secondCrossed)
+			# do crossover
+			if(CROSSOVER == 0):
+				firstCrossed, secondCrossed = self.crossover(firstIndividual, secondIndividual, numNodes)
+				# add to new population
+				newPopulation.append(firstCrossed)
+				if(len(newPopulation) < self.size-1):
+					newPopulation.append(secondCrossed)
+			else:
+				if (CROSSOVER == 1):
+					offspring = self.crossover(firstIndividual, secondIndividual, numNodes)
+					# add to new population
+					newPopulation.append(offspring)
 
 #===================================== DEBUG ======================================
 		if DEBUG == 1:
@@ -239,13 +253,13 @@ class Population:
 			print("----------------------------")
 #==================================================================================
 
-graph, edgeList, numNodes, numEdges = readFileInstance('complicated.col') # flat1000_76_0 simple complicated
+graph, edgeList, numNodes, numEdges = readFileInstance('flat1000_76_0.col') # flat1000_76_0 simple complicated
 
-populationSize = 20
-generations = 200
+populationSize = 50
+generations = 1000
 mutationRate = 0.05
 
-population = Population(populationSize, mutationRate, crossoverOperators.crossover)
+population = Population(populationSize, mutationRate, crossoverOperators.newCrossover)
 for i in range(1, generations+1):
 	print("Generation {0}:".format(i))
 	population.nextGen()
