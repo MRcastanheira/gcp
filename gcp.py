@@ -245,14 +245,14 @@ class Population:
 			print("----------------------------")
 #==================================================================================
 
-graph, edgeList, numNodes, numEdges = readFileInstance('complicated.col') # flat1000_76_0 simple complicated
+graph, edgeList, numNodes, numEdges = readFileInstance('flat1000_76_0.col') # flat1000_76_0 simple complicated
 
 populationSize = 20
-generations = 100
+generations = 10000
 mutationRate = 0.15
 crossoverRate = 0.7
 
-population = Population(populationSize, mutationRate, crossoverRate, crossoverOperators.crossover)
+population = Population(populationSize, mutationRate, crossoverRate, crossoverOperators.singlePointCrossover)
 for i in range(1, generations+1):
 	print("Generation {0}:".format(i))
 	population.nextGen()

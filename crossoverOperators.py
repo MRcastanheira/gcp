@@ -2,7 +2,7 @@ import numpy as np
 from copy import deepcopy
 
 #@profile
-def crossover(indiv1, indiv2, numNodes):
+def singlePointCrossover(indiv1, indiv2, numNodes):
 	crossedIndividual1 = deepcopy(indiv1)
 	crossedIndividual2 = deepcopy(indiv2)
 	cut = np.random.randint(1, numNodes-1)
