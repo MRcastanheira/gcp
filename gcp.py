@@ -9,6 +9,7 @@ from copy import deepcopy
 import crossoverOperators
 
 DEBUG = 0
+CROSSOVER = 0 # 0 == newCrossover | 1 == singlePointCrossover
 
 def readFileInstance(file):
 	nodes = 0
@@ -192,37 +193,40 @@ class Population:
 
 		pointerCount = 0
 		i = 0
-		while(i < self.size and pointerCount < numPointers):
+		while(i < numPointers and pointerCount < numPointers):
 			if accumulated[i] > pointers[pointerCount]:
 				mating.append(i)
 				pointerCount += 1
 				i -= 1
 			i += 1
-
-			if i < 0:
-				i = 0
-
-		random.shuffle(mating)
+		np.random.shuffle(mating)
 
 		newPopulation = []
-		for i in range(0, numPointers, 2):
-			firstIndividual = sortedPopulation[mating[i]]
-			if i+1 >= numPointers:
-				firstIndividual = sortedPopulation[mating[i]]
-			else:
-				secondIndividual = sortedPopulation[mating[i+1]]
+		for i in range(0, numPointers, CROSSOVER+1):
+			firstIndividual = sortedPopulation[mating[i%pointerCount]]
+			secondIndividual = sortedPopulation[mating[(i+1)%pointerCount]]
 
 			r = np.random.random()
 			if self.crossoverRate > r:
-				firstCrossed, secondCrossed = self.crossover(firstIndividual, secondIndividual, numNodes)
+				offspring = []
+				offspring = self.crossover(firstIndividual, secondIndividual, numNodes)
+				# add to new population
+				if not(isinstance(offspring,Individual)):
+					if(len(newPopulation) < self.size-1):
+						newPopulation.append(offspring[0])
+					if(len(newPopulation) < self.size-1):
+						newPopulation.append(offspring[1])
+				else:
+					if(len(newPopulation) < self.size-1):
+						newPopulation.append(offspring)		
 			else:
 				firstCrossed = deepcopy(firstIndividual)
 				secondCrossed = deepcopy(secondIndividual)
-
-			# add to new population
-			newPopulation.append(firstCrossed)
-			if(len(newPopulation) < self.size-1):
-				newPopulation.append(secondCrossed)
+				# add to new population
+				if(len(newPopulation) < self.size-1):
+					newPopulation.append(firstCrossed)
+				if(len(newPopulation) < self.size-1):
+					newPopulation.append(secondCrossed)
 
 #===================================== DEBUG ======================================
 		if DEBUG == 1:
@@ -245,14 +249,17 @@ class Population:
 			print("----------------------------")
 #==================================================================================
 
-graph, edgeList, numNodes, numEdges = readFileInstance('flat1000_76_0.col') # flat1000_76_0 simple complicated
+graph, edgeList, numNodes, numEdges = readFileInstance('complicated.col') # flat1000_76_0 simple complicated
 
-populationSize = 20
-generations = 10000
+populationSize = 50
+generations = 500
 mutationRate = 0.15
 crossoverRate = 0.7
 
-population = Population(populationSize, mutationRate, crossoverRate, crossoverOperators.singlePointCrossover)
+if(CROSSOVER == 1):
+	population = Population(populationSize, mutationRate, crossoverRate, crossoverOperators.singlePointCrossover)
+if(CROSSOVER == 0):
+	population = Population(populationSize, mutationRate, crossoverRate, crossoverOperators.newCrossover)
 for i in range(1, generations+1):
 	print("Generation {0}:".format(i))
 	population.nextGen()
