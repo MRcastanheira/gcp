@@ -2,6 +2,8 @@ import fileinput
 import sys
 import numpy as np
 import time
+import math
+import random
 from copy import deepcopy
 
 import crossoverOperators
@@ -101,9 +103,10 @@ class Population:
 	global numNodes
 	global numEdges
 
-	def __init__(self, size, mutationRate, crossoverMethod):
+	def __init__(self, size, mutationRate, crossoverRate, crossoverMethod):
 		numNodes = len(graph[0])
 		self.size = size
+		self.crossoverRate = crossoverRate
 		self.population = self.initialize(mutationRate)
 		self.crossover = crossoverMethod
 
@@ -176,42 +179,45 @@ class Population:
 #==================================================================================
 
 		# generate a new population
+		numberOfElites = 1
+		numPointers = self.size - numberOfElites
+
+		pointerDistance = math.floor(totalScore / numPointers)
+
+		start = np.random.randint(0, pointerDistance)
+
+		pointers = np.arange(start, totalScore, pointerDistance)
+
+		mating = []
+
+		pointerCount = 0
+		i = 0
+		while(i < self.size and pointerCount < numPointers):
+			if accumulated[i] > pointers[pointerCount]:
+				mating.append(i)
+				pointerCount += 1
+				i -= 1
+			i += 1
+
+			if i < 0:
+				i = 0
+
+		random.shuffle(mating)
+
 		newPopulation = []
-		while(len(newPopulation) < self.size-1):		
-#========================= Roulette Wheel Selection ===============================
-			# # first random individual
-			# firstRandomRange = np.random.randint(0, totalScore+1)
-			# firstIndex = 0
-			# while(accumulated[firstIndex] < firstRandomRange):
-				# firstIndex += 1
+		for i in range(0, numPointers, 2):
+			firstIndividual = sortedPopulation[mating[i]]
+			if i+1 >= numPointers:
+				firstIndividual = sortedPopulation[mating[i]]
+			else:
+				secondIndividual = sortedPopulation[mating[i+1]]
 
-			# firstIndividual = sortedPopulation[firstIndex]
-
-			# # second random individual
-			# secondRandomRange = np.random.randint(0, totalScore+1)
-			# secondIndex = 0
-			# while(accumulated[secondIndex] < secondRandomRange):
-				# secondIndex += 1
-
-			# secondIndividual = sortedPopulation[secondIndex]
-#==================================================================================
-			
-#========================= Stochastic Universal Sampling ==========================
-			# first random individual
-			firstRandomRange = np.random.randint(0, totalScore+1)
-			firstIndex = 0
-			while(accumulated[firstIndex] < firstRandomRange):
-				firstIndex += 1
-
-			firstIndividual = sortedPopulation[firstIndex]
-
-			# second random individual
-			secondIndex = int((self.size / 2 + firstIndex) % self.size)
-			secondIndividual = sortedPopulation[secondIndex]
-
-			# do crossover
-			firstCrossed, secondCrossed = self.crossover(firstIndividual, secondIndividual, numNodes)
-#==================================================================================
+			r = np.random.random()
+			if self.crossoverRate > r:
+				firstCrossed, secondCrossed = self.crossover(firstIndividual, secondIndividual, numNodes)
+			else:
+				firstCrossed = deepcopy(firstIndividual)
+				secondCrossed = deepcopy(secondIndividual)
 
 			# add to new population
 			newPopulation.append(firstCrossed)
@@ -242,10 +248,11 @@ class Population:
 graph, edgeList, numNodes, numEdges = readFileInstance('complicated.col') # flat1000_76_0 simple complicated
 
 populationSize = 20
-generations = 200
-mutationRate = 0.05
+generations = 100
+mutationRate = 0.15
+crossoverRate = 0.7
 
-population = Population(populationSize, mutationRate, crossoverOperators.crossover)
+population = Population(populationSize, mutationRate, crossoverRate, crossoverOperators.crossover)
 for i in range(1, generations+1):
 	print("Generation {0}:".format(i))
 	population.nextGen()
