@@ -42,6 +42,16 @@ def readFileInstance(file):
 
 	return graph, edgeList, nodes, edges
 
+def getCrossoverReturn(crossoverMethod):
+	anyInd = Individual(0)
+
+	crossoverReturn = crossoverMethod(anyInd, anyInd, 5)
+
+	if(isinstance(crossoverReturn, Individual)):
+		return 0
+	else:
+		return 1
+
 class Individual:
 	global graph
 	global edgeList
@@ -218,7 +228,7 @@ class Population:
 						newPopulation.append(offspring[1])
 				else:
 					if(len(newPopulation) < self.size-1):
-						newPopulation.append(offspring)		
+						newPopulation.append(offspring)
 			else:
 				firstCrossed = deepcopy(firstIndividual)
 				secondCrossed = deepcopy(secondIndividual)
@@ -256,10 +266,13 @@ generations = 500
 mutationRate = 0.15
 crossoverRate = 0.7
 
-if(CROSSOVER == 1):
-	population = Population(populationSize, mutationRate, crossoverRate, crossoverOperators.singlePointCrossover)
-if(CROSSOVER == 0):
-	population = Population(populationSize, mutationRate, crossoverRate, crossoverOperators.newCrossover)
-for i in range(1, generations+1):
-	print("Generation {0}:".format(i))
-	population.nextGen()
+res = getCrossoverReturn(crossoverOperators.newCrossover)
+print(res)
+
+# if(CROSSOVER == 1):
+# 	population = Population(populationSize, mutationRate, crossoverRate, crossoverOperators.singlePointCrossover)
+# if(CROSSOVER == 0):
+# 	population = Population(populationSize, mutationRate, crossoverRate, crossoverOperators.newCrossover)
+# for i in range(1, generations+1):
+# 	print("Generation {0}:".format(i))
+# 	population.nextGen()
