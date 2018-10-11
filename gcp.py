@@ -9,7 +9,6 @@ from copy import deepcopy
 import crossoverOperators
 
 DEBUG = 0
-CROSSOVER = 0 # 0 == newCrossover | 1 == singlePointCrossover
 
 def readFileInstance(file):
 	nodes = 0
@@ -114,12 +113,19 @@ class Population:
 	global numNodes
 	global numEdges
 
-	def __init__(self, size, mutationRate, crossoverRate, crossoverMethod):
+	def __init__(self, size, mutationRate, crossoverRate, elitesRate, crossoverMethod):
 		numNodes = len(graph[0])
 		self.size = size
 		self.crossoverRate = crossoverRate
 		self.population = self.initialize(mutationRate)
 		self.crossover = crossoverMethod
+		self.crossoverReturnsDouble = getCrossoverReturn(crossoverMethod)
+		self.numOfElites = math.ceil(size * elitesRate)
+		print("Running for...")
+		print("Population size: {0}".format(size))
+		print("Number of elites: {0}".format(self.numOfElites))
+		print("Mutation rate: {0}%".format(mutationRate*100))
+		print("Crossover rate: {0}%".format(crossoverRate*100))
 
 	def __str__(self):
 		pop = ""
@@ -158,7 +164,6 @@ class Population:
 		# Sort score population pairs list based on the score
 		scores, sortedPopulation = list(zip(*sorted(zip(scores, self.population),
 		 	key=lambda x: x[0])))
-		best = deepcopy(sortedPopulation[-1])
 
 #===================================== PRINTS =====================================
 		print("-------- Best so far -------")
@@ -190,8 +195,7 @@ class Population:
 #==================================================================================
 
 		# generate a new population
-		numberOfElites = 1
-		numPointers = self.size - numberOfElites
+		numPointers = self.size - self.numOfElites
 
 		pointerDistance = math.floor(totalScore / numPointers)
 
@@ -203,7 +207,7 @@ class Population:
 
 		pointerCount = 0
 		i = 0
-		while(i < numPointers and pointerCount < numPointers):
+		while(i < self.size and pointerCount < numPointers):
 			if accumulated[i] > pointers[pointerCount]:
 				mating.append(i)
 				pointerCount += 1
@@ -212,36 +216,38 @@ class Population:
 		np.random.shuffle(mating)
 
 		newPopulation = []
-		for i in range(0, numPointers, CROSSOVER+1):
-			firstIndividual = sortedPopulation[mating[i%pointerCount]]
-			secondIndividual = sortedPopulation[mating[(i+1)%pointerCount]]
+		for i in range(0, numPointers, 1 + self.crossoverReturnsDouble):
+			#print("Acessing {0} of length {1} / {2}".format(i, len(mating), numPointers))
+			firstIndividual = sortedPopulation[mating[i]]
+
+			if i + 1 >= numPointers:
+				secondIndividual = sortedPopulation[mating[0]]
+			else:
+				secondIndividual = sortedPopulation[mating[i+1]]
 
 			r = np.random.random()
 			if self.crossoverRate > r:
 				offspring = []
 				offspring = self.crossover(firstIndividual, secondIndividual, numNodes)
 				# add to new population
-				if not(isinstance(offspring,Individual)):
-					if(len(newPopulation) < self.size-1):
-						newPopulation.append(offspring[0])
-					if(len(newPopulation) < self.size-1):
+				if self.crossoverReturnsDouble:
+					newPopulation.append(offspring[0])
+					if(len(newPopulation) < numPointers):
 						newPopulation.append(offspring[1])
 				else:
-					if(len(newPopulation) < self.size-1):
-						newPopulation.append(offspring)
+					newPopulation.append(offspring)
 			else:
 				firstCrossed = deepcopy(firstIndividual)
-				secondCrossed = deepcopy(secondIndividual)
 				# add to new population
-				if(len(newPopulation) < self.size-1):
-					newPopulation.append(firstCrossed)
-				if(len(newPopulation) < self.size-1):
+				newPopulation.append(firstCrossed)
+				if(self.crossoverReturnsDouble):
+					secondCrossed = deepcopy(secondIndividual)
 					newPopulation.append(secondCrossed)
 
 #===================================== DEBUG ======================================
 		if DEBUG == 1:
 			print("Crossover population:")
-			for i in range(self.size-1):
+			for i in range(numPointers):
 				print(newPopulation[i])
 #==================================================================================
 
@@ -249,7 +255,8 @@ class Population:
 		for i in range(len(newPopulation)):
 			newPopulation[i].mutate()
 
-		newPopulation.append(best)
+		for i in range(1, self.numOfElites+1):
+			newPopulation.append(deepcopy(sortedPopulation[i*-1]))
 
 		self.population = newPopulation
 
@@ -259,20 +266,18 @@ class Population:
 			print("----------------------------")
 #==================================================================================
 
-graph, edgeList, numNodes, numEdges = readFileInstance('complicated.col') # flat1000_76_0 simple complicated
+graph, edgeList, numNodes, numEdges = readFileInstance('flat1000_76_0.col') # flat1000_76_0 simple complicated
 
-populationSize = 50
-generations = 500
-mutationRate = 0.15
-crossoverRate = 0.7
+populationSize = 100
+generations = 1000000
+mutationRate = 0.1
+crossoverRate = 0.8
+elitesRate = 0.1
 
-res = getCrossoverReturn(crossoverOperators.newCrossover)
-print(res)
+# res = getCrossoverReturn(crossoverOperators.newCrossover)
+# print(res)
 
-# if(CROSSOVER == 1):
-# 	population = Population(populationSize, mutationRate, crossoverRate, crossoverOperators.singlePointCrossover)
-# if(CROSSOVER == 0):
-# 	population = Population(populationSize, mutationRate, crossoverRate, crossoverOperators.newCrossover)
-# for i in range(1, generations+1):
-# 	print("Generation {0}:".format(i))
-# 	population.nextGen()
+population = Population(populationSize, mutationRate, crossoverRate, elitesRate, crossoverOperators.newCrossover)
+for i in range(1, generations+1):
+	print("Generation {0}: ".format(i))
+	population.nextGen()
