@@ -1,14 +1,71 @@
 import fileinput
-import sys
+import sys, getopt
 import numpy as np
 import time
 import math
 import random
+import os
 from copy import deepcopy
 
 import crossoverOperators
 
 DEBUG = 0
+
+def handleArgs(argv):
+	script = os.path.basename(__file__)
+	inputFile = ''
+	outputFile = ''
+	usage = 'Usage: ' + script + ' -i <inputfile>' + "\n"
+	usage += "Optionals: -o <outputfile>" + "\n"
+	usage += "Optionals: -p <population>" + "\n"
+	usage += "Optionals: -g <generations>" + "\n"
+	usage += "Optionals: -g <mutation rate>" + "\n"
+	usage += "Optionals: -m <mutation rate>" + "\n"
+	usage += "Optionals: -c <crossover rate>" + "\n"
+	usage += "Optionals: -e <elites rate>"
+
+	if(len(argv) == 0):
+		print(usage)
+		sys.exit()
+	try:
+		opts, args = getopt.getopt(argv, "h:i:p:g:m:c:e:o:")
+	except getopt.GetoptError:
+		print(usage)
+		sys.exit(2)
+
+	dic = {}
+	for opt, arg in opts:
+		if opt == '-h':
+			print(usage)
+			sys.exit()
+		elif opt in ("-i"):
+			dic["input"] = arg
+		elif opt in ("-p"):
+			dic["populationSize"] = int(arg)
+		elif opt in ("-g"):
+			dic["generations"] = int(arg)
+		elif opt in ("-g"):
+			dic["mutationRate"] = float(arg)
+		elif opt in ("-m"):
+			dic["crossoverRate"] = float(arg)
+		elif opt in ("-e"):
+			dic["elitesRate"] = float(arg)
+		elif opt in ("-o"):
+			dic["output"] = arg
+	return dic
+
+def openOutput(fp):
+	global outputFile
+	try:
+		outputFile = open(fp, "w")
+		return 1
+	except IOError:
+		print ("Error: File does not appear to exist.")
+		return 0
+
+def write(string):
+	if outputFile is not None:
+		outputFile.write(string)
 
 def readFileInstance(file):
 	nodes = 0
@@ -262,19 +319,34 @@ def main(argv):
 	global edgeList
 	global numNodes
 	global numEdges
+	global outputFile
 
-	graph, edgeList, numNodes, numEdges = readFileInstance('flat1000_76_0.col') # flat1000_76_0 simple complicated
+	outputFile = None
 
-	populationSize = 100
-	generations = 1000000
-	mutationRate = 0.1
-	crossoverRate = 0.8
-	elitesRate = 0.1
+	io = handleArgs(argv)
 
-	population = Population(populationSize, mutationRate, crossoverRate, elitesRate, crossoverOperators.newCrossover)
-	for i in range(1, generations+1):
-		print("Generation {0}: ".format(i))
-		population.nextGen()
+	if('output' in io):
+		openOutput(io['output'])
+
+	if('input' in io):
+		graph, edgeList, numNodes, numEdges = readFileInstance(io['input']) # flat1000_76_0 simple complicated
+
+		params = {
+	        'populationSize': 100,
+	        'generations': 1000000,
+	        'mutationRate': 0.1,
+			'crossoverRate': 0.8,
+			'elitesRate': 0.1
+	    }
+
+		for key, value in params.items():
+			if(key in io):
+				params[key] = io[key]
+
+		population = Population(params['populationSize'], params['mutationRate'], params['crossoverRate'], params['elitesRate'], crossoverOperators.newCrossover)
+		for i in range(1, params['generations'] + 1):
+			print("Generation {0}: ".format(i))
+			population.nextGen()
 
 if __name__ == "__main__":
    main(sys.argv[1:])
