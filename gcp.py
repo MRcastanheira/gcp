@@ -180,7 +180,7 @@ class Population:
 		print("Mutation rate: {0}%".format(mutationRate*100))
 		print("Crossover rate: {0}%".format(crossoverRate*100))
 
-		write("Generation, Mean fitness, best fitness, valid solutions\n");
+		write("Generation, Mean fitness, Best fitness, Valid solutions, Colors\n");
 
 	def __str__(self):
 		pop = ""
@@ -322,13 +322,15 @@ class Population:
 			for individual in self.population:
 				if individual.isValidSolution():
 					numValids += 1
-			scoreMean = totalScore / self.size
+			scoreMean = int(totalScore / self.size)
 			bestScore = format(scores[self.size-1])
+			colors = format(sortedPopulation[self.size-1].validColors())
 			stats = ""
 			stats += str(generation) + ', '
 			stats += str(scoreMean) + ', '
 			stats += str(bestScore) + ', '
-			stats += str(numValids)
+			stats += str(numValids) + ', '
+			stats += str(colors)
 			stats += "\n"
 
 			write(stats)
