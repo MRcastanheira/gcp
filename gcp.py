@@ -52,11 +52,6 @@ def getCrossoverReturn(crossoverMethod):
 		return 1
 
 class Individual:
-	global graph
-	global edgeList
-	global numNodes
-	global numEdges
-
 	def __init__(self, mutationRate):
 		self.vertexColors = np.random.randint(1, numNodes+1, size=numNodes) #creates an assortment of random colors
 		self.mutationRate = mutationRate
@@ -109,10 +104,6 @@ class Individual:
 		return str(self.vertexColors) + " (" + str(self.fitness()) + ")"
 
 class Population:
-	global graph
-	global numNodes
-	global numEdges
-
 	def __init__(self, size, mutationRate, crossoverRate, elitesRate, crossoverMethod):
 		numNodes = len(graph[0])
 		self.size = size
@@ -266,18 +257,24 @@ class Population:
 			print("----------------------------")
 #==================================================================================
 
-graph, edgeList, numNodes, numEdges = readFileInstance('flat1000_76_0.col') # flat1000_76_0 simple complicated
+def main(argv):
+	global graph
+	global edgeList
+	global numNodes
+	global numEdges
 
-populationSize = 100
-generations = 1000000
-mutationRate = 0.1
-crossoverRate = 0.8
-elitesRate = 0.1
+	graph, edgeList, numNodes, numEdges = readFileInstance('flat1000_76_0.col') # flat1000_76_0 simple complicated
 
-# res = getCrossoverReturn(crossoverOperators.newCrossover)
-# print(res)
+	populationSize = 100
+	generations = 1000000
+	mutationRate = 0.1
+	crossoverRate = 0.8
+	elitesRate = 0.1
 
-population = Population(populationSize, mutationRate, crossoverRate, elitesRate, crossoverOperators.newCrossover)
-for i in range(1, generations+1):
-	print("Generation {0}: ".format(i))
-	population.nextGen()
+	population = Population(populationSize, mutationRate, crossoverRate, elitesRate, crossoverOperators.newCrossover)
+	for i in range(1, generations+1):
+		print("Generation {0}: ".format(i))
+		population.nextGen()
+
+if __name__ == "__main__":
+   main(sys.argv[1:])
