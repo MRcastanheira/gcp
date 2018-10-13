@@ -44,9 +44,9 @@ def handleArgs(argv):
 			dic["populationSize"] = int(arg)
 		elif opt in ("-g"):
 			dic["generations"] = int(arg)
-		elif opt in ("-g"):
-			dic["mutationRate"] = float(arg)
 		elif opt in ("-m"):
+			dic["mutationRate"] = float(arg)
+		elif opt in ("-c"):
 			dic["crossoverRate"] = float(arg)
 		elif opt in ("-e"):
 			dic["elitesRate"] = float(arg)
@@ -62,6 +62,9 @@ def openOutput(fp):
 	except IOError:
 		print ("Error: File does not appear to exist.")
 		return 0
+
+def wantStatistics():
+	return outputFile is not None
 
 def write(string):
 	if outputFile is not None:
@@ -161,6 +164,8 @@ class Individual:
 		return str(self.vertexColors) + " (" + str(self.fitness()) + ")"
 
 class Population:
+	global generation
+
 	def __init__(self, size, mutationRate, crossoverRate, elitesRate, crossoverMethod):
 		numNodes = len(graph[0])
 		self.size = size
@@ -174,6 +179,8 @@ class Population:
 		print("Number of elites: {0}".format(self.numOfElites))
 		print("Mutation rate: {0}%".format(mutationRate*100))
 		print("Crossover rate: {0}%".format(crossoverRate*100))
+
+		write("Generation, Mean fitness, best fitness, valid solutions\n");
 
 	def __str__(self):
 		pop = ""
@@ -202,6 +209,8 @@ class Population:
 			print()
 
 	def nextGen(self):
+		global generation
+
 		totalScore = 0
 		scores = [0] * self.size
 		accumulated = [0] * self.size
@@ -308,6 +317,24 @@ class Population:
 
 		self.population = newPopulation
 
+		if wantStatistics():
+			numValids = 0
+			for individual in self.population:
+				if individual.isValidSolution():
+					numValids += 1
+			scoreMean = totalScore / self.size
+			bestScore = format(scores[self.size-1])
+			stats = ""
+			stats += str(generation) + ', '
+			stats += str(scoreMean) + ', '
+			stats += str(bestScore) + ', '
+			stats += str(numValids)
+			stats += "\n"
+
+			write(stats)
+
+		generation += 1
+
 #===================================== DEBUG ======================================
 		if DEBUG == 1:
 			print("Crossover + Mutated population: \n{0}".format(self))
@@ -320,8 +347,10 @@ def main(argv):
 	global numNodes
 	global numEdges
 	global outputFile
+	global generation
 
 	outputFile = None
+	generation = 1
 
 	io = handleArgs(argv)
 
@@ -340,7 +369,7 @@ def main(argv):
 	    }
 
 		for key, value in params.items():
-			if(key in io):
+			if key in io:
 				params[key] = io[key]
 
 		population = Population(params['populationSize'], params['mutationRate'], params['crossoverRate'], params['elitesRate'], crossoverOperators.newCrossover)
