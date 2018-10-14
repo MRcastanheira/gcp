@@ -146,9 +146,11 @@ class Individual:
 		for position in range(numNodes):
 			r = np.random.random()
 			if(self.mutationRate > r):
-				# USED BEFORE, SIMPLE MUTATION
-				#self.vertexColors[position] = np.random.randint(1, numNodes+1)
+				# if(valid == 1):
+					# # USED BEFORE, SIMPLE MUTATION
+					# self.vertexColors[position] = np.random.randint(1, numNodes+1)
 
+				# else:
 				# GET VALID COLOR
 				colors = list(map(lambda x: self.vertexColors[x], vectorList[position]))
 				#print("Selecting new color for node {0}".format(position))
@@ -169,9 +171,13 @@ class Individual:
 
 	#@profile
 	def isValidSolution(self):
+		# global isValid
 		for edge in edgeList:
 			if(self.vertexColors[edge[0]] == self.vertexColors[edge[1]]):
 				return False
+		# if(isValid == 0):
+			# isValid = 1
+			# self.mutationRate = self.mutationRate/100
 		return True
 
 	def __str__(self):
@@ -227,6 +233,7 @@ class Population:
 
 	def nextGen(self):
 		global generation
+		valid = 0 #amount of valid individuals on the population
 
 		totalScore = 0
 		scores = [0] * self.size
@@ -234,6 +241,8 @@ class Population:
 
 		for i in range(self.size):
 			scores[i] = self.population[i].fitness()
+			if(self.population[i].isValidSolution()):
+				valid += 1
 
 		# Sort score population pairs list based on the score
 		scores, sortedPopulation = list(zip(*sorted(zip(scores, self.population),
@@ -242,6 +251,7 @@ class Population:
 #===================================== PRINTS =====================================
 		print("-------- Best so far -------")
 		#print("Colors: {0}".format(sortedPopulation[self.size-1].vertexColors))
+		print("{0}/{1} are valid solutions".format(valid,self.size))
 		print("Number of colors: {0}".format(sortedPopulation[self.size-1].validColors()))
 		print("Is valid solution: {0}".format("yes" if
 			sortedPopulation[self.size-1].isValidSolution() else "no"))
@@ -361,6 +371,7 @@ class Population:
 #==================================================================================
 
 def main(argv):
+	global isValid
 	global graph
 	global edgeList
 	global numNodes
@@ -368,6 +379,7 @@ def main(argv):
 	global outputFile
 	global generation
 	global vectorList
+	isValid = 0
 
 	outputFile = None
 	generation = 1
@@ -376,6 +388,16 @@ def main(argv):
 
 	if('output' in io):
 		openOutput(io['output'])
+		
+	# example for execution: py gcp.py -i flat1000_76_0.col -o output.csv -g 1000000 -p 50 -m 0.001 -c 0.8 -e 0.1
+	# explain what each parameter is:
+	# -i is the graph instance, a file that represents amount of nodes and edges
+	# -o is the name of the output file, used to generate graphs for analysis
+	# -g is the maximum number of generations the program will loop for
+	# -p is the population size
+	# -m is the mutation rate
+	# -c is the crossover rate
+	# -e is the percentage of elites that will be taken from the population after each generation
 
 	if('input' in io):
 		graph, edgeList, numNodes, numEdges, vectorList = readFileInstance(io['input']) # flat1000_76_0 simple complicated
