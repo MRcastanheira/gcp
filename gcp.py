@@ -88,9 +88,11 @@ def readFileInstance(file):
 			inputEdges.append([fromVertex, toVertex])
 
 	graph = [0] * nodes
+	vectorList = [0] * nodes
 	edgeList = []
 	for j in range(nodes):
 		graph[j] = [0] * nodes
+		vectorList[j] = [] * nodes
 
 	for x in inputEdges:
 		j = x[0] - 1
@@ -98,8 +100,10 @@ def readFileInstance(file):
 		graph[j][i] = 1
 		graph[i][j] = 1
 		edgeList.append([i,j])
+		vectorList[i].append(j)
+		vectorList[j].append(i)
 
-	return graph, edgeList, nodes, edges
+	return graph, edgeList, nodes, edges, vectorList
 
 def getCrossoverReturn(crossoverMethod):
 	anyInd = Individual(0)
@@ -142,7 +146,20 @@ class Individual:
 		for position in range(numNodes):
 			r = np.random.random()
 			if(self.mutationRate > r):
-				self.vertexColors[position] = np.random.randint(1, numNodes+1)
+				# USED BEFORE, SIMPLE MUTATION
+				#self.vertexColors[position] = np.random.randint(1, numNodes+1)
+
+				# GET VALID COLOR
+				colors = list(map(lambda x: self.vertexColors[x], vectorList[position]))
+				#print("Selecting new color for node {0}".format(position))
+				#print("Adjacent nodes colors: {0}".format(colors))
+				solved = False
+				while(not solved):
+					tryColor = np.random.randint(1, numNodes+1)
+					if tryColor not in colors:
+						self.vertexColors[position] = tryColor
+						solved = True
+				#print("Selected new color: {0}".format(self.vertexColors[position]))
 		# print(self.vertexColors)
 		# print("-------------")
 		# if(self.mutationRate > r):
@@ -350,6 +367,7 @@ def main(argv):
 	global numEdges
 	global outputFile
 	global generation
+	global vectorList
 
 	outputFile = None
 	generation = 1
@@ -360,7 +378,7 @@ def main(argv):
 		openOutput(io['output'])
 
 	if('input' in io):
-		graph, edgeList, numNodes, numEdges = readFileInstance(io['input']) # flat1000_76_0 simple complicated
+		graph, edgeList, numNodes, numEdges, vectorList = readFileInstance(io['input']) # flat1000_76_0 simple complicated
 
 		params = {
 	        'populationSize': 100,
