@@ -120,6 +120,9 @@ class Individual:
 		self.vertexColors = np.random.randint(1, numNodes+1, size=numNodes) #creates an assortment of random colors
 		self.mutationRate = mutationRate
 
+	def setMutation(self, mutationRate):
+		self.mutationRate = mutationRate
+
 	#@profile
 	def fitness(self):
 		score = 0
@@ -146,21 +149,22 @@ class Individual:
 		for position in range(numNodes):
 			r = np.random.random()
 			if(self.mutationRate > r):
-				# if(valid == 1):
-					# # USED BEFORE, SIMPLE MUTATION
-					# self.vertexColors[position] = np.random.randint(1, numNodes+1)
-
-				# else:
-				# GET VALID COLOR
-				colors = list(map(lambda x: self.vertexColors[x], vectorList[position]))
-				#print("Selecting new color for node {0}".format(position))
-				#print("Adjacent nodes colors: {0}".format(colors))
-				solved = False
-				while(not solved):
-					tryColor = np.random.randint(1, numNodes+1)
-					if tryColor not in colors:
-						self.vertexColors[position] = tryColor
-						solved = True
+				if(bFoundValid == 1):
+					#print("SIMPLE MUTATION {0}".format(self.mutationRate))
+					# USED BEFORE, SIMPLE MUTATION
+					self.vertexColors[position] = np.random.randint(1, numNodes+1)
+				else:
+					#print("STUPID MUTATION {0}".format(self.mutationRate))
+					# GET VALID COLOR
+					colors = list(map(lambda x: self.vertexColors[x], vectorList[position]))
+					#print("Selecting new color for node {0}".format(position))
+					#print("Adjacent nodes colors: {0}".format(colors))
+					solved = False
+					while(not solved):
+						tryColor = np.random.randint(1, numNodes+1)
+						if tryColor not in colors:
+							self.vertexColors[position] = tryColor
+							solved = True
 				#print("Selected new color: {0}".format(self.vertexColors[position]))
 		# print(self.vertexColors)
 		# print("-------------")
@@ -175,9 +179,6 @@ class Individual:
 		for edge in edgeList:
 			if(self.vertexColors[edge[0]] == self.vertexColors[edge[1]]):
 				return False
-		# if(isValid == 0):
-			# isValid = 1
-			# self.mutationRate = self.mutationRate/100
 		return True
 
 	def __str__(self):
@@ -203,7 +204,7 @@ class Population:
 		print("Mutation rate: {0}%".format(mutationRate*100))
 		print("Crossover rate: {0}%".format(crossoverRate*100))
 
-		write("Generation, Mean fitness, Best fitness, Valid solutions, Colors\n");
+		write("Generation, Mean fitness, Best fitness, Valid solutions, Colors, Mean Colors\n");
 
 	def __str__(self):
 		pop = ""
@@ -231,18 +232,30 @@ class Population:
 				sys.stdout.write(str(graph[i][j]) + " ")
 			print()
 
+	def updatePopulationMutationRate(self, mutationRate):
+		print("CHANGE MUTATTIOOOOOOOOOOOOOON")
+		for i in range(self.size):
+			self.population[i].setMutation(mutationRate)
+
 	def nextGen(self):
 		global generation
-		valid = 0 #amount of valid individuals on the population
-
+		global bFoundValid
+		#bFoundValid = False #amount of valid individuals on the population
 		totalScore = 0
 		scores = [0] * self.size
 		accumulated = [0] * self.size
 
 		for i in range(self.size):
 			scores[i] = self.population[i].fitness()
-			if(self.population[i].isValidSolution()):
-				valid += 1
+
+		if(not bFoundValid):
+			doOnce = False
+			for i in range(self.size):
+				if(self.population[i].isValidSolution()):
+					bFoundValid = True
+					if(not doOnce):
+						self.updatePopulationMutationRate(self.population[i].mutationRate / 800)
+						doOnce = True
 
 		# Sort score population pairs list based on the score
 		scores, sortedPopulation = list(zip(*sorted(zip(scores, self.population),
@@ -251,7 +264,7 @@ class Population:
 #===================================== PRINTS =====================================
 		print("-------- Best so far -------")
 		#print("Colors: {0}".format(sortedPopulation[self.size-1].vertexColors))
-		print("{0}/{1} are valid solutions".format(valid,self.size))
+		#print("{0}/{1} are valid solutions".format(valid,self.size))
 		print("Number of colors: {0}".format(sortedPopulation[self.size-1].validColors()))
 		print("Is valid solution: {0}".format("yes" if
 			sortedPopulation[self.size-1].isValidSolution() else "no"))
@@ -346,20 +359,27 @@ class Population:
 
 		if wantStatistics():
 			numValids = 0
+			totalColors = 0
 			for individual in self.population:
+				totalColors += individual.validColors()
 				if individual.isValidSolution():
 					numValids += 1
+
 			scoreMean = int(totalScore / self.size)
 			bestScore = format(scores[self.size-1])
 			colors = format(sortedPopulation[self.size-1].validColors())
+			colorsMean = int(totalColors / self.size)
 			stats = ""
 			stats += str(generation) + ', '
 			stats += str(scoreMean) + ', '
 			stats += str(bestScore) + ', '
 			stats += str(numValids) + ', '
-			stats += str(colors)
+			stats += str(colors) + ', '
+			stats += str(colorsMean)
 			stats += "\n"
-
+			clear = lambda: os.system('cls')
+			clear()
+			sys.stdout.write(stats)
 			write(stats)
 
 		generation += 1
@@ -371,7 +391,7 @@ class Population:
 #==================================================================================
 
 def main(argv):
-	global isValid
+	global bFoundValid
 	global graph
 	global edgeList
 	global numNodes
@@ -379,7 +399,7 @@ def main(argv):
 	global outputFile
 	global generation
 	global vectorList
-	isValid = 0
+	bFoundValid = False
 
 	outputFile = None
 	generation = 1
@@ -388,7 +408,7 @@ def main(argv):
 
 	if('output' in io):
 		openOutput(io['output'])
-		
+
 	# example for execution: py gcp.py -i flat1000_76_0.col -o output.csv -g 1000000 -p 50 -m 0.001 -c 0.8 -e 0.1
 	# explain what each parameter is:
 	# -i is the graph instance, a file that represents amount of nodes and edges
