@@ -377,9 +377,9 @@ class Population:
 			stats += str(colors) + ', '
 			stats += str(colorsMean)
 			stats += "\n"
-			clear = lambda: os.system('cls')
-			clear()
-			sys.stdout.write(stats)
+			#clear = lambda: os.system('cls')
+			#clear()
+			#sys.stdout.write(stats)
 			write(stats)
 
 		generation += 1
@@ -406,8 +406,8 @@ def main(argv):
 
 	io = handleArgs(argv)
 
-	if('output' in io):
-		openOutput(io['output'])
+	# if('output' in io):
+		# openOutput(io['output'])
 
 	# example for execution: py gcp.py -i flat1000_76_0.col -o output.csv -g 1000000 -p 50 -m 0.001 -c 0.8 -e 0.1
 	# explain what each parameter is:
@@ -419,24 +419,29 @@ def main(argv):
 	# -c is the crossover rate
 	# -e is the percentage of elites that will be taken from the population after each generation
 
-	if('input' in io):
-		graph, edgeList, numNodes, numEdges, vectorList = readFileInstance(io['input']) # flat1000_76_0 simple complicated
+	#if('input' in io): removing the input to go through list of graphs instead
+		#graph, edgeList, numNodes, numEdges, vectorList = readFileInstance(io['input']) # flat1000_76_0 simple complicated
 
-		params = {
-	        'populationSize': 100,
-	        'generations': 1000000,
-	        'mutationRate': 0.1,
-			'crossoverRate': 0.8,
-			'elitesRate': 0.1
-	    }
+	params = {
+		'populationSize': 100,
+		'generations': 1000000,
+		'mutationRate': 0.1,
+		'crossoverRate': 0.8,
+		'elitesRate': 0.1
+	}
 
-		for key, value in params.items():
-			if key in io:
-				params[key] = io[key]
-
-		population = Population(params['populationSize'], params['mutationRate'], params['crossoverRate'], params['elitesRate'], crossoverOperators.newCrossover)
-		for i in range(1, params['generations'] + 1):
-			print("Generation {0}: ".format(i))
+	for key, value in params.items():
+		if key in io:
+			params[key] = io[key]
+			
+	graphList = ["simple","complicated","flat1000_76_0"]
+	for i in graphList:
+		openOutput("output" + i + ".csv")
+		graph, edgeList, numNodes, numEdges, vectorList = readFileInstance(i+".col")
+		write("Population Size: %i | Mutation Rate: %.4f | Crossover Rate: %.4f | Elite Rate: %.4f | \n" % (params['populationSize'],params['mutationRate'], params['crossoverRate'], params['elitesRate']))
+		population = Population(params['populationSize'], params['mutationRate'], params['crossoverRate'], params['elitesRate'], crossoverOperators.newCrossover)		
+		for j in range(1, params['generations'] + 1):
+			print("Generation {0}: ".format(j))
 			population.nextGen()
 
 if __name__ == "__main__":
