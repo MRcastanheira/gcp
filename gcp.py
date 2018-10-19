@@ -233,7 +233,7 @@ class Population:
 			print()
 
 	def updatePopulationMutationRate(self, mutationRate):
-		print("CHANGE MUTATTIOOOOOOOOOOOOOON")
+		print("Mutation Change")
 		for i in range(self.size):
 			self.population[i].setMutation(mutationRate)
 
@@ -377,7 +377,7 @@ class Population:
 			stats += str(colors) + ', '
 			stats += str(colorsMean)
 			stats += "\n"
-			#clear = lambda: os.system('cls')
+			#clear = lambda: os.system('cls') # Clearing the console may be undesireble by the user
 			#clear()
 			#sys.stdout.write(stats)
 			write(stats)
@@ -434,10 +434,10 @@ def main(argv):
 		if key in io:
 			params[key] = io[key]
 			
-	graphList = ["simple","complicated","flat1000_76_0"]
+	graphList = ["simple","complicated","dsjc500.1","flat1000_76_0"]
 	for i in graphList:
 		openOutput("output" + i + ".csv")
-		graph, edgeList, numNodes, numEdges, vectorList = readFileInstance(i+".col")
+		graph, edgeList, numNodes, numEdges, vectorList = readFileInstance(i + ".col")
 		write("Population Size: %i | Mutation Rate: %.4f | Crossover Rate: %.4f | Elite Rate: %.4f | \n" % (params['populationSize'],params['mutationRate'], params['crossoverRate'], params['elitesRate']))
 		population = Population(params['populationSize'], params['mutationRate'], params['crossoverRate'], params['elitesRate'], crossoverOperators.newCrossover)		
 		for j in range(1, params['generations'] + 1):
