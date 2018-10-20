@@ -150,28 +150,17 @@ class Individual:
 			r = np.random.random()
 			if(self.mutationRate > r):
 				if(bFoundValid == 1):
-					#print("SIMPLE MUTATION {0}".format(self.mutationRate))
 					# USED BEFORE, SIMPLE MUTATION
 					self.vertexColors[position] = np.random.randint(1, numNodes+1)
 				else:
-					#print("STUPID MUTATION {0}".format(self.mutationRate))
 					# GET VALID COLOR
 					colors = list(map(lambda x: self.vertexColors[x], vectorList[position]))
-					#print("Selecting new color for node {0}".format(position))
-					#print("Adjacent nodes colors: {0}".format(colors))
 					solved = False
 					while(not solved):
 						tryColor = np.random.randint(1, numNodes+1)
 						if tryColor not in colors:
 							self.vertexColors[position] = tryColor
 							solved = True
-				#print("Selected new color: {0}".format(self.vertexColors[position]))
-		# print(self.vertexColors)
-		# print("-------------")
-		# if(self.mutationRate > r):
-			# for i in range(np.random.randint(0, numNodes+1)):
-				# position = np.random.randint(0, numNodes)
-				# self.vertexColors[position] = np.random.randint(1, numNodes+1)
 
 	#@profile
 	def isValidSolution(self):
@@ -198,11 +187,11 @@ class Population:
 		self.crossover = crossoverMethod
 		self.crossoverReturnsDouble = getCrossoverReturn(crossoverMethod)
 		self.numOfElites = math.ceil(size * elitesRate)
-		print("Running for...")
-		print("Population size: {0}".format(size))
-		print("Number of elites: {0}".format(self.numOfElites))
-		print("Mutation rate: {0}%".format(mutationRate*100))
-		print("Crossover rate: {0}%".format(crossoverRate*100))
+		# print("Running for...")
+		# print("Population size: {0}".format(size))
+		# print("Number of elites: {0}".format(self.numOfElites))
+		# print("Mutation rate: {0}%".format(mutationRate*100))
+		# print("Crossover rate: {0}%".format(crossoverRate*100))
 
 		write("Generation, Mean fitness, Best fitness, Valid solutions, Colors, Mean Colors\n");
 
@@ -233,7 +222,6 @@ class Population:
 			print()
 
 	def updatePopulationMutationRate(self, mutationRate):
-		print("CHANGE MUTATTIOOOOOOOOOOOOOON")
 		for i in range(self.size):
 			self.population[i].setMutation(mutationRate)
 
@@ -262,13 +250,13 @@ class Population:
 		 	key=lambda x: x[0])))
 
 #===================================== PRINTS =====================================
-		print("-------- Best so far -------")
-		#print("Colors: {0}".format(sortedPopulation[self.size-1].vertexColors))
-		#print("{0}/{1} are valid solutions".format(valid,self.size))
-		print("Number of colors: {0}".format(sortedPopulation[self.size-1].validColors()))
-		print("Is valid solution: {0}".format("yes" if
-			sortedPopulation[self.size-1].isValidSolution() else "no"))
-		print("Best = {0}".format(scores[self.size-1]))
+		# print("-------- Best so far -------")
+		# #print("Colors: {0}".format(sortedPopulation[self.size-1].vertexColors))
+		# #print("{0}/{1} are valid solutions".format(valid,self.size))
+		# print("Number of colors: {0}".format(sortedPopulation[self.size-1].validColors()))
+		# print("Is valid solution: {0}".format("yes" if
+		# 	sortedPopulation[self.size-1].isValidSolution() else "no"))
+		# print("Best = {0}".format(scores[self.size-1]))
 #==================================================================================
 
 		# compute cumulative score
@@ -377,9 +365,6 @@ class Population:
 			stats += str(colors) + ', '
 			stats += str(colorsMean)
 			stats += "\n"
-			clear = lambda: os.system('cls')
-			clear()
-			sys.stdout.write(stats)
 			write(stats)
 
 		generation += 1
@@ -436,7 +421,7 @@ def main(argv):
 
 		population = Population(params['populationSize'], params['mutationRate'], params['crossoverRate'], params['elitesRate'], crossoverOperators.newCrossover)
 		for i in range(1, params['generations'] + 1):
-			print("Generation {0}: ".format(i))
+			#print("Generation {0}: ".format(i))
 			population.nextGen()
 
 if __name__ == "__main__":
