@@ -28,7 +28,7 @@ def handleArgs(argv):
 		print(usage)
 		sys.exit()
 	try:
-		opts, args = getopt.getopt(argv, "h:i:p:g:m:c:e:o:")
+		opts, args = getopt.getopt(argv, "h:i:p:g:m:c:e:f:u:o:")
 	except getopt.GetoptError:
 		print(usage)
 		sys.exit(2)
@@ -50,6 +50,10 @@ def handleArgs(argv):
 			dic["crossoverRate"] = float(arg)
 		elif opt in ("-e"):
 			dic["elitesRate"] = float(arg)
+		elif opt in ("-f"):
+			dic["fitnessValidFactor"] = float(arg)
+		elif opt in ("-u"):
+			dic["upgradeMutationRate"] = float(arg)
 		elif opt in ("-o"):
 			dic["output"] = arg
 	return dic
@@ -106,7 +110,7 @@ def readFileInstance(file):
 	return graph, edgeList, nodes, edges, vectorList
 
 def getCrossoverReturn(crossoverMethod):
-	anyInd = Individual(0)
+	anyInd = Individual(0, 10)
 
 	crossoverReturn = crossoverMethod(anyInd, anyInd, 5)
 
@@ -116,9 +120,10 @@ def getCrossoverReturn(crossoverMethod):
 		return 1
 
 class Individual:
-	def __init__(self, mutationRate):
+	def __init__(self, mutationRate, fitnessValidFactor):
 		self.vertexColors = np.random.randint(1, numNodes+1, size=numNodes) #creates an assortment of random colors
 		self.mutationRate = mutationRate
+		self.fitnessValidFactor = fitnessValidFactor
 
 	def setMutation(self, mutationRate):
 		self.mutationRate = mutationRate
@@ -133,7 +138,7 @@ class Individual:
 				edgeViolationScore -= 1
 
 		normalizedColors = numNodes - self.validColors() + 1
-		vertexColoringScore = normalizedColors * 10
+		vertexColoringScore = normalizedColors * self.fitnessValidFactor
 
 		if(self.isValidSolution()):
 			score += edgeViolationScore + vertexColoringScore
@@ -179,21 +184,25 @@ class Individual:
 class Population:
 	global generation
 
-	def __init__(self, size, mutationRate, crossoverRate, elitesRate, crossoverMethod):
+	def __init__(self, size, mutationRate, crossoverRate, elitesRate, fitnessValidFactor, upgradeMutationRate, crossoverMethod):
 		numNodes = len(graph[0])
 		self.size = size
 		self.crossoverRate = crossoverRate
-		self.population = self.initialize(mutationRate)
+		self.population = self.initialize(upgradeMutationRate, fitnessValidFactor)
+		self.mutationRate = mutationRate # TODO MOVE TO INDIVIDUAL
+		self.upgradeMutationRate = upgradeMutationRate # TODO MOVE TO INDIVIDUAL
 		self.crossover = crossoverMethod
 		self.crossoverReturnsDouble = getCrossoverReturn(crossoverMethod)
 		self.numOfElites = math.ceil(size * elitesRate)
-		# print("Running for...")
-		# print("Population size: {0}".format(size))
-		# print("Number of elites: {0}".format(self.numOfElites))
-		# print("Mutation rate: {0}%".format(mutationRate*100))
-		# print("Crossover rate: {0}%".format(crossoverRate*100))
+		print("Running for...")
+		print("Population size: {0}".format(size))
+		print("Number of elites: {0}".format(self.numOfElites))
+		print("Mutation rate: {0}%".format(mutationRate*100))
+		print("Crossover rate: {0}%".format(crossoverRate*100))
+		print("Fitness valid factor: {0}%".format(fitnessValidFactor))
+		print("upgradeMutationRate rate: {0}%".format(upgradeMutationRate))
 
-		write("Generation, Mean fitness, Best fitness, Valid solutions, Colors, Mean Colors\n");
+		write("h Generation, Mean fitness, Best fitness, Valid solutions, Colors, Mean Colors\n");
 
 	def __str__(self):
 		pop = ""
@@ -201,10 +210,10 @@ class Population:
 			pop += i.visual() + "\n"
 		return pop
 
-	def initialize(self, mutationRate):
+	def initialize(self, mutationRate, fitnessValidFactor):
 		population = []
 		for i in range(self.size):
-			individual = Individual(mutationRate)
+			individual = Individual(mutationRate, fitnessValidFactor)
 			population.append(individual)
 		return population
 
@@ -242,7 +251,7 @@ class Population:
 				if(self.population[i].isValidSolution()):
 					bFoundValid = True
 					if(not doOnce):
-						self.updatePopulationMutationRate(self.population[i].mutationRate / 800)
+						self.updatePopulationMutationRate(self.mutationRate)
 						doOnce = True
 
 		# Sort score population pairs list based on the score
@@ -412,14 +421,16 @@ def main(argv):
 	        'generations': 1000000,
 	        'mutationRate': 0.1,
 			'crossoverRate': 0.8,
-			'elitesRate': 0.1
+			'elitesRate': 0.1,
+			'fitnessValidFactor': 10,
+			'upgradeMutationRate': 0.8
 	    }
 
 		for key, value in params.items():
 			if key in io:
 				params[key] = io[key]
 
-		population = Population(params['populationSize'], params['mutationRate'], params['crossoverRate'], params['elitesRate'], crossoverOperators.newCrossover)
+		population = Population(params['populationSize'], params['mutationRate'], params['crossoverRate'], params['elitesRate'], params['fitnessValidFactor'], params['upgradeMutationRate'], crossoverOperators.newCrossover)
 		for i in range(1, params['generations'] + 1):
 			#print("Generation {0}: ".format(i))
 			population.nextGen()
