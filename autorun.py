@@ -65,13 +65,13 @@ file = "gcp.py"
 inputList = ["input/anna", "david", "fpsol2.i.1", "games120", "homer", "huck", "jean", "miles250", "miles1000", "myciel3", "myciel3", "myciel4", "myciel5", "queen5_5", "queen6_6", "queen7_7", "queen8_8"]
 #inputList = ["simple", "complicated", "dsjc500.1", "flat1000_76_0"]
 #inputList = ["simple"]
-generationsList = ["100", "500", "2000"]
-populationList = ["5", "20", "50"]
+generationsList = ["500", "10000"]
+populationList = ["5", "20"]
 mutationRateList = ["0.001", "0.01", "0.05", "0.1"]
 crossoverRateList = ["0.8", "0.6"]
 elitesRateList = ["0.1", "0.2"]
 fitnessValidFactorList = ["10", "1", "100"]
-upgradeMutationRate = ["0.8", "0.5", "1"]
+upgradeMutationRateList = ["0.8", "0.5"]
 
 # end of params ---
 
@@ -95,5 +95,5 @@ for input in inputList:
                 for crossoverRate in crossoverRateList:
                     for elitesRate in elitesRateList:
                         for fitnessValidFactor in fitnessValidFactorList:
-                            for upgradeMutationRate in upgradeMutationRate:
+                            for upgradeMutationRate in upgradeMutationRateList:
                                 run(file, input, generations, population, mutationRate, crossoverRate, elitesRate, fitnessValidFactor, upgradeMutationRate)
