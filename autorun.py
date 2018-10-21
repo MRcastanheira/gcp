@@ -62,7 +62,7 @@ useRelativePath = 0 # 0 -- relative, 1 -- use allowed users
 
 file = "gcp.py"
 #inputList = ["queen7_7"]
-inputList = ["input/anna", "david", "fpsol2.i.1", "games120", "homer", "huck", "jean", "miles250", "miles1000", "myciel3", "myciel3", "myciel4", "myciel5", "queen5_5", "queen6_6", "queen7_7", "queen8_8"]
+inputList = ["input/anna", "input/david", "input/fpsol2.i.1", "input/games120", "input/homer", "input/huck", "input/jean", "input/miles250", "input/miles1000", "input/myciel3", "input/myciel3", "input/myciel4", "input/myciel5", "input/queen5_5", "input/queen6_6", "input/queen7_7", "input/queen8_8"]
 #inputList = ["simple", "complicated", "dsjc500.1", "flat1000_76_0"]
 #inputList = ["simple"]
 generationsList = ["500", "10000"]
