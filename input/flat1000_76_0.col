@@ -13,6 +13,7 @@ c under simple greedy yields the specified
 c coloring number
 c Color = 76 specified partitions = 76
 p edge 1000 246708
+b 76
 e 3 1
 e 5 2
 e 5 4

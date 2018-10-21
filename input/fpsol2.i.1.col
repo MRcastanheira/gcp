@@ -7,6 +7,7 @@ c              problem based on real code.
 c
 c graph #1 from register allocation file -
 p edge 496 11654
+b 65
 e 1 2
 e 1 3
 e 1 4

@@ -4,6 +4,7 @@ c DESCRIPTION: Graph based on Mycielski transformation.
 c              Triangle free (clique number 2) but increasing
 c              coloring number
 p edge 47 236
+b 6
 e 1 2
 e 1 4
 e 1 7

@@ -55,23 +55,25 @@ def run(file, input, generations, population, mutationRate, crossoverRate, elite
         os.system(graphCommand + graphCommandColumn)
 
 # params ---
-rootDir = "outputsRelatorio1" # -- root dir to save outputs
+rootDir = "resultsITER_1" # -- root dir to save outputs
 allowedUsers = ["Diego", "Matheus"] # should be your system username
 allowedUsersPath = ["C:/Users/Diego/Desktop/Computacao evolutiva/gcp/", "D:/Matheus/Documents/Google Drive/UFRGS Estudo/Semestre 11/Computação Evolutiva/Trabalho Prático I/"]
 useRelativePath = 0 # 0 -- relative, 1 -- use allowed users
 
 file = "gcp.py"
 #inputList = ["queen7_7"]
-inputList = ["input/anna", "input/david", "input/fpsol2.i.1", "input/games120", "input/homer", "input/huck", "input/jean", "input/miles250", "input/miles1000", "input/myciel3", "input/myciel3", "input/myciel4", "input/myciel5", "input/queen5_5", "input/queen6_6", "input/queen7_7", "input/queen8_8"]
+inputList = ["input/simple", "input/complicated", "input/anna", "input/david", "input/fpsol2.i.1", "input/games120", "input/homer", "input/huck", "input/jean", "input/miles250", "input/miles1000", "input/myciel3", "input/myciel3", "input/myciel4", "input/myciel5", "input/queen5_5", "input/queen6_6", "input/queen7_7", "input/queen8_8", "input/dsjc500.1", "flat1000_76_0"]
+#inputList = ["input/anna"]
+#inputList = ["input/simple"]
 #inputList = ["simple", "complicated", "dsjc500.1", "flat1000_76_0"]
 #inputList = ["simple"]
-generationsList = ["500", "10000"]
-populationList = ["5", "20"]
-mutationRateList = ["0.001", "0.01", "0.05", "0.1"]
-crossoverRateList = ["0.8", "0.6"]
-elitesRateList = ["0.1", "0.2"]
-fitnessValidFactorList = ["10", "1", "100"]
-upgradeMutationRateList = ["0.8", "0.5"]
+generationsList = ["5000"]
+populationList = ["100"]
+mutationRateList = ["0.0001"]
+crossoverRateList = ["0.95"]
+elitesRateList = ["0.05"]
+fitnessValidFactorList = ["500"]
+upgradeMutationRateList = ["0.9"]
 
 # end of params ---
 

@@ -90,6 +90,9 @@ def readFileInstance(file):
 			fromVertex = int(params[1])
 			toVertex = int(params[2])
 			inputEdges.append([fromVertex, toVertex])
+		elif (line[0] == 'b'):
+			params = line.split()
+			cromaticNumber = int(params[1])
 
 	graph = [0] * nodes
 	vectorList = [0] * nodes
@@ -107,7 +110,7 @@ def readFileInstance(file):
 		vectorList[i].append(j)
 		vectorList[j].append(i)
 
-	return graph, edgeList, nodes, edges, vectorList
+	return graph, edgeList, nodes, edges, vectorList, cromaticNumber
 
 def getCrossoverReturn(crossoverMethod):
 	anyInd = Individual(0, 10)
@@ -199,8 +202,8 @@ class Population:
 		print("Number of elites: {0}".format(self.numOfElites))
 		print("Mutation rate: {0}%".format(mutationRate*100))
 		print("Crossover rate: {0}%".format(crossoverRate*100))
-		print("Fitness valid factor: {0}%".format(fitnessValidFactor))
-		print("upgradeMutationRate rate: {0}%".format(upgradeMutationRate))
+		print("Fitness valid factor: {0}".format(fitnessValidFactor))
+		print("upgradeMutationRate rate: {0}%".format(upgradeMutationRate*100))
 
 		write("h Generation, Mean fitness, Best fitness, Valid solutions, Colors, Mean Colors\n");
 
@@ -253,6 +256,7 @@ class Population:
 					if(not doOnce):
 						self.updatePopulationMutationRate(self.mutationRate)
 						doOnce = True
+						write("i Changed mutation\n")
 
 		# Sort score population pairs list based on the score
 		scores, sortedPopulation = list(zip(*sorted(zip(scores, self.population),
@@ -393,6 +397,7 @@ def main(argv):
 	global outputFile
 	global generation
 	global vectorList
+	global cromaticNumber
 	bFoundValid = False
 
 	outputFile = None
@@ -414,7 +419,7 @@ def main(argv):
 	# -e is the percentage of elites that will be taken from the population after each generation
 
 	if('input' in io):
-		graph, edgeList, numNodes, numEdges, vectorList = readFileInstance(io['input']) # flat1000_76_0 simple complicated
+		graph, edgeList, numNodes, numEdges, vectorList, cromaticNumber = readFileInstance(io['input']) # flat1000_76_0 simple complicated
 
 		params = {
 	        'populationSize': 100,
@@ -430,10 +435,21 @@ def main(argv):
 			if key in io:
 				params[key] = io[key]
 
+		start = time.time()
 		population = Population(params['populationSize'], params['mutationRate'], params['crossoverRate'], params['elitesRate'], params['fitnessValidFactor'], params['upgradeMutationRate'], crossoverOperators.newCrossover)
 		for i in range(1, params['generations'] + 1):
 			#print("Generation {0}: ".format(i))
+			best = population.population[params['populationSize']-1]
+			if (best.validColors() == cromaticNumber):
+				break;
 			population.nextGen()
+		end = time.time()
+		elapsed = end - start
+		print("Elapsed time is {0}".format(elapsed))
+		write("i Elapsed time is {0}\n".format(round(elapsed, 2)))
+		best = population.population[params['populationSize']-1]
+		isValid = "valid" if best.isValidSolution() else "invalid"
+		write("i Best is {0} colors and its {1}\n".format(best.validColors(), isValid))
 
 if __name__ == "__main__":
    main(sys.argv[1:])
